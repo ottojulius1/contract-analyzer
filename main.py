@@ -3,6 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import openai
 import os
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -15,8 +20,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize OpenAI
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Check OpenAI API key
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    logger.error("No OpenAI API key found!")
+else:
+    logger.info("OpenAI API key found")
+    openai.api_key = api_key
 
 @app.get("/")
 async def root():
@@ -24,17 +34,21 @@ async def root():
 
 @app.post("/analyze")
 async def analyze_contract(file: UploadFile = File(...)):
+    logger.info(f"Received file: {file.filename}")
+    
     try:
-        # Test OpenAI connection first
+        # Test OpenAI connection
+        logger.info("Testing OpenAI connection...")
         try:
             test_response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "user", "content": "Say hello"}
+                    {"role": "user", "content": "Test message"}
                 ]
             )
-            print("OpenAI test successful")
+            logger.info("OpenAI connection successful")
         except Exception as e:
+            logger.error(f"OpenAI connection failed: {str(e)}")
             return JSONResponse(
                 status_code=500,
                 content={"detail": f"OpenAI API error: {str(e)}"}
@@ -42,7 +56,7 @@ async def analyze_contract(file: UploadFile = File(...)):
 
         # If we get here, OpenAI is working
         return JSONResponse(content={
-            "summary": "Test summary",
+            "summary": "Test summary - OpenAI connection working",
             "key_terms": [
                 {"term": "Test Term", "value": "Test Value"}
             ],
@@ -50,6 +64,7 @@ async def analyze_contract(file: UploadFile = File(...)):
         })
 
     except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"detail": f"Error: {str(e)}"}
