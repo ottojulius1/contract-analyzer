@@ -68,6 +68,12 @@
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
                 <p class="mt-4 text-gray-600">Analyzing contract...</p>
             </div>
+
+            <!-- Debug Info -->
+            <div id="debugInfo" class="mt-4 p-4 bg-gray-100 rounded-lg hidden">
+                <h3 class="font-semibold">Debug Information</h3>
+                <pre id="debugContent" class="mt-2 text-sm whitespace-pre-wrap"></pre>
+            </div>
         </div>
     </div>
 
@@ -84,6 +90,14 @@
         const questionInput = document.getElementById('questionInput');
         const askBtn = document.getElementById('askBtn');
         const qaHistory = document.getElementById('qaHistory');
+        const debugInfo = document.getElementById('debugInfo');
+        const debugContent = document.getElementById('debugContent');
+
+        // Debug Function
+        function showDebug(info) {
+            debugInfo.classList.remove('hidden');
+            debugContent.textContent = JSON.stringify(info, null, 2);
+        }
 
         // File Upload Handling
         fileInput.addEventListener('change', handleFileSelect);
@@ -125,16 +139,23 @@
 
             try {
                 showLoading(true);
+                debugInfo.classList.add('hidden');
+                
                 const response = await fetch(`${BACKEND_URL}/analyze`, {
                     method: 'POST',
                     body: formData
                 });
 
-                if (!response.ok) throw new Error('Analysis failed');
+                const data = await response.json();
+                showDebug({ status: response.status, data: data });
 
-                const result = await response.json();
-                displayResults(result);
+                if (!response.ok) {
+                    throw new Error(data.detail || JSON.stringify(data) || 'Analysis failed');
+                }
+
+                displayResults(data);
             } catch (error) {
+                console.error('Full error:', error);
                 alert('Error analyzing contract: ' + error.message);
             } finally {
                 showLoading(false);
@@ -157,12 +178,16 @@
                     body: formData
                 });
 
-                if (!response.ok) throw new Error('Failed to get answer');
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to get answer');
+                }
 
-                const result = await response.json();
-                updateQAResponse(questionElement, result.answer);
+                updateQAResponse(questionElement, data.answer);
                 questionInput.value = '';
             } catch (error) {
+                console.error('Q&A error:', error);
                 alert('Error getting answer: ' + error.message);
             }
         });
