@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import openai
+from openai import OpenAI
 import os
 import logging
 
@@ -20,13 +20,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Check OpenAI API key
-api_key = os.getenv("OPENAI_API_KEY")
-if not api_key:
-    logger.error("No OpenAI API key found!")
-else:
-    logger.info("OpenAI API key found")
-    openai.api_key = api_key
+# Initialize OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 @app.get("/")
 async def root():
@@ -40,7 +35,7 @@ async def analyze_contract(file: UploadFile = File(...)):
         # Test OpenAI connection
         logger.info("Testing OpenAI connection...")
         try:
-            test_response = openai.ChatCompletion.create(
+            test_response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "user", "content": "Test message"}
