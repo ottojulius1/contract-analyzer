@@ -8,6 +8,7 @@ import io
 import os
 import json
 import logging
+import re
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -27,6 +28,30 @@ app.add_middleware(
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+def clean_json_string(s: str) -> str:
+    """Clean and extract JSON from a string that might contain markdown or other text."""
+    # Find content between triple backticks if present
+    json_match = re.search(r'```json\s*(.*?)\s*```', s, re.DOTALL)
+    if json_match:
+        s = json_match.group(1)
+    else:
+        # Try to find content between single backticks
+        json_match = re.search(r'`(.*?)`', s, re.DOTALL)
+        if json_match:
+            s = json_match.group(1)
+    return s.strip()
+
+def parse_json_response(response_text: str) -> Dict:
+    """Safely parse JSON from API response."""
+    try:
+        # Clean the response text
+        cleaned_text = clean_json_string(response_text)
+        # Parse JSON
+        return json.loads(cleaned_text)
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON Parse Error: {str(e)}\nText: {response_text}")
+        raise ValueError(f"Failed to parse JSON response: {str(e)}")
+
 def extract_text_from_pdf(file_bytes):
     try:
         pdf_file = io.BytesIO(file_bytes)
@@ -45,20 +70,10 @@ def detect_document_type(text: str) -> Dict:
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": """You are a legal document classifier. 
-                Analyze the document and determine its type from these categories:
-                - CONTRACT: General contract or agreement
-                - EMPLOYMENT: Employment-related document
-                - REAL_ESTATE: Real estate document
-                - LEGAL_BRIEF: Legal brief or court document
-                - CORPORATE: Corporate document
-                - PATENT: Patent or IP document
-                - REGULATORY: Regulatory document
-                - FINANCE: Financial document
-                
-                Respond with a JSON object containing:
+                Analyze the document and determine its type. Respond with ONLY a JSON object in this exact format:
                 {
-                    "type": "detected type code",
-                    "confidence": confidence score (0-1),
+                    "type": "CONTRACT/EMPLOYMENT/REAL_ESTATE/LEGAL_BRIEF/CORPORATE/PATENT/REGULATORY/FINANCE",
+                    "confidence": 0.XX,
                     "indicators": ["reason 1", "reason 2"]
                 }"""},
                 {"role": "user", "content": f"Classify this document:\n\n{text[:2000]}"}
@@ -66,18 +81,7 @@ def detect_document_type(text: str) -> Dict:
             temperature=0.2
         )
         
-        result = response.choices[0].message.content
-        # Try to parse the response as JSON
-        try:
-            return json.loads(result)
-        except json.JSONDecodeError:
-            logger.error(f"Failed to parse response as JSON: {result}")
-            return {
-                "type": "CONTRACT",
-                "confidence": 0.5,
-                "indicators": ["Default classification due to parsing error"]
-            }
-            
+        return parse_json_response(response.choices[0].message.content)
     except Exception as e:
         logger.error(f"Document type detection error: {str(e)}")
         return {
@@ -91,44 +95,32 @@ def analyze_document(text: str, doc_type: str) -> Dict:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": f"""You are a legal document analyzer. Analyze this document and provide:
-                1. A clear summary
-                2. Key terms and their values
-                3. Important dates and deadlines
-                4. Potential risks
-                5. Areas needing attention
-
-                Respond with a JSON object in this exact format:
-                {{
+                {"role": "system", "content": """You are a legal document analyzer. Respond with ONLY a JSON object in this exact format:
+                {
                     "summary": "brief overview",
                     "key_terms": [
-                        {{"term": "term name", "value": "term description"}}
+                        {"term": "term name", "value": "term description"}
                     ],
                     "dates": [
-                        {{"event": "event description", "date": "date value"}}
+                        {"event": "event description", "date": "date value"}
                     ],
                     "risks": [
                         "risk description"
                     ],
                     "flags": [
-                        {{"severity": "HIGH/MEDIUM/LOW", 
-                          "issue": "issue description",
-                          "recommendation": "suggested action"}}
+                        {
+                            "severity": "HIGH/MEDIUM/LOW",
+                            "issue": "issue description",
+                            "recommendation": "suggested action"
+                        }
                     ]
-                }}"""},
+                }"""},
                 {"role": "user", "content": f"Analyze this document:\n\n{text}"}
             ],
             temperature=0.2
         )
         
-        result = response.choices[0].message.content
-        # Try to parse the response as JSON
-        try:
-            return json.loads(result)
-        except json.JSONDecodeError:
-            logger.error(f"Failed to parse analysis response as JSON: {result}")
-            raise HTTPException(status_code=500, detail="Failed to parse analysis results")
-            
+        return parse_json_response(response.choices[0].message.content)
     except Exception as e:
         logger.error(f"Analysis error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Analysis error: {str(e)}")
@@ -139,9 +131,6 @@ async def analyze_contract(file: UploadFile = File(...)):
         # Extract text from PDF
         contents = await file.read()
         text = extract_text_from_pdf(contents)
-        
-        # Log the extracted text length
-        logger.info(f"Extracted {len(text)} characters from PDF")
         
         if not text.strip():
             raise HTTPException(status_code=400, detail="No text could be extracted from the PDF")
@@ -166,7 +155,7 @@ async def analyze_contract(file: UploadFile = File(...)):
         logger.error(f"Analysis error: {str(e)}")
         return JSONResponse(
             status_code=500,
-            content={"detail": f"Analysis error: {str(e)}"}
+            content={"detail": str(e)}
         )
 
 @app.post("/ask")
