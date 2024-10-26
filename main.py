@@ -27,18 +27,6 @@ app.add_middleware(
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Document type definitions
-DOCUMENT_TYPES = {
-    "CONTRACT": "General contract or agreement",
-    "EMPLOYMENT": "Employment-related document",
-    "REAL_ESTATE": "Real estate document",
-    "LEGAL_BRIEF": "Legal brief or court document",
-    "CORPORATE": "Corporate document (bylaws, operating agreements)",
-    "PATENT": "Patent or IP document",
-    "REGULATORY": "Regulatory or compliance document",
-    "FINANCE": "Financial or tax document"
-}
-
 def extract_text_from_pdf(file_bytes):
     try:
         pdf_file = io.BytesIO(file_bytes)
@@ -72,74 +60,75 @@ def detect_document_type(text: str) -> Dict:
                     "type": "detected type code",
                     "confidence": confidence score (0-1),
                     "indicators": ["reason 1", "reason 2"]
-                }
-                """},
+                }"""},
                 {"role": "user", "content": f"Classify this document:\n\n{text[:2000]}"}
             ],
             temperature=0.2
         )
-        return json.loads(response.choices[0].message.content)
+        
+        result = response.choices[0].message.content
+        # Try to parse the response as JSON
+        try:
+            return json.loads(result)
+        except json.JSONDecodeError:
+            logger.error(f"Failed to parse response as JSON: {result}")
+            return {
+                "type": "CONTRACT",
+                "confidence": 0.5,
+                "indicators": ["Default classification due to parsing error"]
+            }
+            
     except Exception as e:
         logger.error(f"Document type detection error: {str(e)}")
-        return {"type": "CONTRACT", "confidence": 0.5, "indicators": ["Default classification due to error"]}
+        return {
+            "type": "CONTRACT",
+            "confidence": 0.5,
+            "indicators": ["Default classification due to error"]
+        }
 
 def analyze_document(text: str, doc_type: str) -> Dict:
-    # Custom analysis prompts for different document types
-    type_prompts = {
-        "CONTRACT": """Analyze this contract for:
-            1. Contract purpose and parties
-            2. Key terms, obligations, and values
-            3. Important dates and deadlines
-            4. Termination conditions
-            5. Potential risks and missing elements""",
-            
-        "EMPLOYMENT": """Analyze this employment document for:
-            1. Position and parties involved
-            2. Compensation and benefits
-            3. Terms of employment
-            4. Obligations and restrictions
-            5. Termination conditions""",
-            
-        "REAL_ESTATE": """Analyze this real estate document for:
-            1. Property details and parties
-            2. Transaction terms
-            3. Conditions and contingencies
-            4. Important dates and deadlines
-            5. Legal obligations and restrictions""",
-            
-        # Add more document types as needed
-    }
-
-    prompt = type_prompts.get(doc_type, type_prompts["CONTRACT"])
-    
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": f"""You are a legal document analyzer specialized in {doc_type} documents.
-                {prompt}
-                
-                Respond in this JSON format:
+                {"role": "system", "content": f"""You are a legal document analyzer. Analyze this document and provide:
+                1. A clear summary
+                2. Key terms and their values
+                3. Important dates and deadlines
+                4. Potential risks
+                5. Areas needing attention
+
+                Respond with a JSON object in this exact format:
                 {{
-                    "summary": "comprehensive summary",
+                    "summary": "brief overview",
                     "key_terms": [
-                        {{"term": "term name", "value": "description"}}
+                        {{"term": "term name", "value": "term description"}}
                     ],
                     "dates": [
-                        {{"event": "event name", "date": "date value"}}
+                        {{"event": "event description", "date": "date value"}}
                     ],
-                    "risks": ["risk 1", "risk 2"],
+                    "risks": [
+                        "risk description"
+                    ],
                     "flags": [
-                        {{"severity": "HIGH/MEDIUM/LOW", "issue": "description", "recommendation": "suggestion"}}
+                        {{"severity": "HIGH/MEDIUM/LOW", 
+                          "issue": "issue description",
+                          "recommendation": "suggested action"}}
                     ]
-                }}
-                """},
+                }}"""},
                 {"role": "user", "content": f"Analyze this document:\n\n{text}"}
             ],
             temperature=0.2
         )
         
-        return json.loads(response.choices[0].message.content)
+        result = response.choices[0].message.content
+        # Try to parse the response as JSON
+        try:
+            return json.loads(result)
+        except json.JSONDecodeError:
+            logger.error(f"Failed to parse analysis response as JSON: {result}")
+            raise HTTPException(status_code=500, detail="Failed to parse analysis results")
+            
     except Exception as e:
         logger.error(f"Analysis error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Analysis error: {str(e)}")
@@ -151,12 +140,19 @@ async def analyze_contract(file: UploadFile = File(...)):
         contents = await file.read()
         text = extract_text_from_pdf(contents)
         
+        # Log the extracted text length
+        logger.info(f"Extracted {len(text)} characters from PDF")
+        
+        if not text.strip():
+            raise HTTPException(status_code=400, detail="No text could be extracted from the PDF")
+        
         # Detect document type
         doc_type_info = detect_document_type(text)
         logger.info(f"Detected document type: {doc_type_info}")
         
         # Perform analysis
         analysis = analyze_document(text, doc_type_info["type"])
+        logger.info("Analysis completed successfully")
         
         # Combine results
         result = {
