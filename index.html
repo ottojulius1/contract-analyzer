@@ -409,60 +409,79 @@ document.getElementById('quickStatsContent').innerHTML = quickStatsHtml;
             `).join('');
             document.getElementById('risksContent').innerHTML = risksHtml;
 
-            // Display clause analysis if available
-            if (analysis.clause_analysis) {
-                const clausesHtml = analysis.clause_analysis.clauses.map(clause => `
-                    <div class="bg-white shadow rounded-lg p-4">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="font-medium">${clause.type}</div>
-                            <span class="text-xs px-2 py-1 rounded ${clause.is_standard ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
-                                ${clause.is_standard ? 'Standard' : 'Non-Standard'}
-                            </span>
-                        </div>
-                        <div class="text-gray-600 mb-2">${clause.text}</div>
-                        ${clause.risks?.length > 0 ? `
-                            <div class="mt-2">
-                                <div class="text-sm font-medium">Risks:</div>
-                                <ul class="list-disc pl-4 text-sm text-red-600">
-                                    ${clause.risks.map(risk => `<li>${risk}</li>`).join('')}
-                                </ul>
-                            </div>
-                        ` : ''}
-                        ${clause.recommendations?.length > 0 ? `
-                            <div class="mt-2">
-                                <div class="text-sm font-medium">Recommendations:</div>
-                                <ul class="list-disc pl-4 text-sm text-blue-600">
-                                    ${clause.recommendations.map(rec => `<li>${rec}</li>`).join('')}
-                                </ul>
-                            </div>
-                        ` : ''}
+          // Display clause analysis if available
+if (analysis.clause_analysis) {
+    // Key Clauses
+    if (analysis.clause_analysis.clauses && analysis.clause_analysis.clauses.length > 0) {
+        const clausesHtml = analysis.clause_analysis.clauses.map(clause => `
+            <div class="bg-white shadow rounded-lg p-4">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="font-medium">${clause.type || 'Unnamed Clause'}</div>
+                    <span class="text-xs px-2 py-1 rounded ${clause.is_standard ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                        ${clause.is_standard ? 'Standard' : 'Non-Standard'}
+                    </span>
+                </div>
+                <div class="text-gray-600 mb-2">${clause.text || 'No content available'}</div>
+                ${clause.risks && clause.risks.length > 0 ? `
+                    <div class="mt-2">
+                        <div class="text-sm font-medium">Risks:</div>
+                        <ul class="list-disc pl-4 text-sm text-red-600">
+                            ${clause.risks.map(risk => `<li>${risk}</li>`).join('')}
+                        </ul>
                     </div>
-                `).join('');
-                document.getElementById('clausesContent').innerHTML = clausesHtml;
+                ` : ''}
+                ${clause.recommendations && clause.recommendations.length > 0 ? `
+                    <div class="mt-2">
+                        <div class="text-sm font-medium">Recommendations:</div>
+                        <ul class="list-disc pl-4 text-sm text-blue-600">
+                            ${clause.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+        document.getElementById('clausesContent').innerHTML = clausesHtml;
+    } else {
+        document.getElementById('clausesContent').innerHTML = `
+            <div class="bg-gray-50 rounded-lg p-4 text-gray-600">
+                No specific clauses were identified in the analysis.
+            </div>
+        `;
+    }
 
-                // Display missing clauses
-                const missingClausesHtml = analysis.clause_analysis.missing_clauses?.length > 0 
-                    ? `<ul class="list-disc pl-4">
-                        ${analysis.clause_analysis.missing_clauses.map(clause => `
-                            <li class="text-yellow-800">${clause}</li>
-                        `).join('')}
-                    </ul>`
-                    : '<p class="text-green-800">No missing standard clauses detected.</p>';
-                document.getElementById('missingClausesContent').innerHTML = missingClausesHtml;
+    // Missing Clauses
+    const missingClausesHtml = analysis.clause_analysis.missing_clauses && analysis.clause_analysis.missing_clauses.length > 0 
+        ? `<ul class="list-disc pl-4">
+            ${analysis.clause_analysis.missing_clauses.map(clause => `
+                <li class="text-yellow-800">${clause}</li>
+            `).join('')}
+        </ul>`
+        : '<p class="text-green-800">No missing standard clauses detected.</p>';
+    document.getElementById('missingClausesContent').innerHTML = missingClausesHtml;
 
-                // Display unusual provisions
-                const unusualProvisionsHtml = analysis.clause_analysis.unusual_provisions?.length > 0
-                    ? `<ul class="list-disc pl-4">
-                        ${analysis.clause_analysis.unusual_provisions.map(provision => `
-                            <li class="text-red-800">${provision}</li>
-                        `).join('')}
-                    </ul>`
-                    : '<p class="text-green-800">No unusual provisions detected.</p>';
-                document.getElementById('unusualProvisionsContent').innerHTML = unusualProvisionsHtml;
-            }
-
-            resultsSection.classList.remove('hidden');
-        }
+    // Unusual Provisions
+    const unusualProvisionsHtml = analysis.clause_analysis.unusual_provisions && analysis.clause_analysis.unusual_provisions.length > 0
+        ? `<ul class="list-disc pl-4">
+            ${analysis.clause_analysis.unusual_provisions.map(provision => `
+                <li class="text-red-800">${provision}</li>
+            `).join('')}
+        </ul>`
+        : '<p class="text-green-800">No unusual provisions detected.</p>';
+    document.getElementById('unusualProvisionsContent').innerHTML = unusualProvisionsHtml;
+} else {
+    // Set default content when no clause analysis is available
+    document.getElementById('clausesContent').innerHTML = `
+        <div class="bg-gray-50 rounded-lg p-4 text-gray-600">
+            Clause analysis is not available for this document.
+        </div>
+    `;
+    document.getElementById('missingClausesContent').innerHTML = `
+        <p class="text-gray-600">No clause analysis available.</p>
+    `;
+    document.getElementById('unusualProvisionsContent').innerHTML = `
+        <p class="text-gray-600">No clause analysis available.</p>
+    `;
+}
 
         function addToQAHistory(question, answer) {
             const qaElement = document.createElement('div');
