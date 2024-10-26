@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contract Analyzer</title>
+    <title>Legal Document Analyzer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50">
-    <div class="max-w-4xl mx-auto p-6">
+    <div class="max-w-6xl mx-auto p-6">
         <div class="bg-white rounded-lg shadow-lg p-6">
-            <h1 class="text-2xl font-bold mb-6">Contract Analyzer</h1>
+            <h1 class="text-2xl font-bold mb-6">Legal Document Analyzer</h1>
             
             <!-- Upload Section -->
             <div class="mb-8">
@@ -21,30 +21,55 @@
                             <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                             </svg>
-                            <p class="text-sm">Drop your PDF contract here or click to upload</p>
+                            <p class="text-sm">Drop your PDF document here or click to upload</p>
                         </div>
                     </label>
                 </div>
                 <button id="analyzeBtn" class="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded-lg disabled:bg-gray-300" disabled>
-                    Analyze Contract
+                    Analyze Document
                 </button>
             </div>
 
             <!-- Results Section -->
-            <div id="resultsSection" class="hidden space-y-6">
-                <div>
-                    <h2 class="text-xl font-semibold mb-3">Summary</h2>
-                    <div id="summaryContent" class="bg-gray-50 rounded-lg p-4"></div>
+            <div id="resultsSection" class="hidden">
+                <!-- Document Type Info -->
+                <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+                    <h2 class="text-xl font-semibold mb-2">Document Type</h2>
+                    <div id="documentTypeContent"></div>
                 </div>
 
-                <div>
-                    <h2 class="text-xl font-semibold mb-3">Key Terms</h2>
-                    <div id="keyTermsContent" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                </div>
+                <!-- Analysis Results -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Left Column -->
+                    <div class="space-y-6">
+                        <div>
+                            <h2 class="text-xl font-semibold mb-3">Summary</h2>
+                            <div id="summaryContent" class="bg-gray-50 rounded-lg p-4"></div>
+                        </div>
 
-                <div>
-                    <h2 class="text-xl font-semibold mb-3">Potential Risks</h2>
-                    <div id="risksContent" class="space-y-2"></div>
+                        <div>
+                            <h2 class="text-xl font-semibold mb-3">Key Terms</h2>
+                            <div id="keyTermsContent" class="space-y-2"></div>
+                        </div>
+
+                        <div>
+                            <h2 class="text-xl font-semibold mb-3">Important Dates</h2>
+                            <div id="datesContent" class="space-y-2"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="space-y-6">
+                        <div>
+                            <h2 class="text-xl font-semibold mb-3">Risk Analysis</h2>
+                            <div id="risksContent" class="space-y-2"></div>
+                        </div>
+
+                        <div>
+                            <h2 class="text-xl font-semibold mb-3">Red Flags</h2>
+                            <div id="flagsContent" class="space-y-2"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Q&A Section -->
@@ -53,7 +78,7 @@
                     <form id="questionForm" class="flex space-x-2">
                         <input type="text" id="questionInput" 
                                class="flex-1 border rounded-lg px-4 py-2" 
-                               placeholder="Ask a question about the contract...">
+                               placeholder="Ask a question about the document...">
                         <button type="submit" id="askBtn" 
                                 class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
                             Ask
@@ -66,7 +91,7 @@
             <!-- Loading State -->
             <div id="loadingState" class="hidden text-center py-8">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p class="mt-4 text-gray-600">Processing...</p>
+                <p class="mt-4 text-gray-600">Analyzing document...</p>
             </div>
         </div>
     </div>
@@ -101,11 +126,6 @@
             handleFile(file);
         });
 
-        function handleFileSelect(e) {
-            const file = e.target.files[0];
-            handleFile(file);
-        }
-
         function handleFile(file) {
             if (file && file.type === 'application/pdf') {
                 currentFile = file;
@@ -116,7 +136,7 @@
             }
         }
 
-        // Contract Analysis
+        // Document Analysis
         analyzeBtn.addEventListener('click', async () => {
             if (!currentFile) return;
 
@@ -139,7 +159,7 @@
                 displayResults(data);
             } catch (error) {
                 console.error('Analysis error:', error);
-                alert('Error analyzing contract: ' + error.message);
+                alert('Error analyzing document: ' + error.message);
             } finally {
                 showLoading(false);
             }
@@ -156,7 +176,7 @@
             formData.append('question', question);
 
             try {
-                const questionElement = addToQAHistory(question, 'Thinking...');
+                const questionElement = addToQAHistory(question, 'Analyzing...');
                 showLoading(true);
 
                 const response = await fetch(`${BACKEND_URL}/ask`, {
@@ -185,10 +205,32 @@
             loadingState.classList.toggle('hidden', !show);
         }
 
-        function displayResults(result) {
-            document.getElementById('summaryContent').textContent = result.summary;
+        function displayResults(data) {
+            // Display document type info
+            const docType = data.document_type;
+            const docTypeHtml = `
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium">Type: ${docType.type}</p>
+                        <p class="text-sm text-gray-600">Confidence: ${(docType.confidence * 100).toFixed(1)}%</p>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <p>Indicators:</p>
+                        <ul class="list-disc pl-4">
+                            ${docType.indicators.map(i => `<li>${i}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+            document.getElementById('documentTypeContent').innerHTML = docTypeHtml;
+
+            const analysis = data.analysis;
+
+            // Display summary
+            document.getElementById('summaryContent').textContent = analysis.summary;
             
-            const keyTermsHtml = result.key_terms.map(term => `
+            // Display key terms
+            const keyTermsHtml = analysis.key_terms.map(term => `
                 <div class="bg-white shadow rounded-lg p-4">
                     <div class="font-medium">${term.term}</div>
                     <div class="text-gray-600">${term.value}</div>
@@ -196,14 +238,64 @@
             `).join('');
             document.getElementById('keyTermsContent').innerHTML = keyTermsHtml;
 
-            const risksHtml = result.risks.map(risk => `
+            // Display dates
+            const datesHtml = analysis.dates.map(date => `
+                <div class="bg-white shadow rounded-lg p-4">
+                    <div class="font-medium">${date.event}</div>
+                    <div class="text-gray-600">${date.date}</div>
+                </div>
+            `).join('');
+            document.getElementById('datesContent').innerHTML = datesHtml;
+
+            // Display risks
+            const risksHtml = analysis.risks.map(risk => `
                 <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                     ${risk}
                 </div>
             `).join('');
             document.getElementById('risksContent').innerHTML = risksHtml;
 
+            // Display flags
+            const flagsHtml = analysis.flags.map(flag => `
+                <div class="border rounded-lg p-4 ${getSeverityColor(flag.severity)}">
+                    <div class="font-medium flex items-center justify-between">
+                        <span>${flag.issue}</span>
+                        <span class="px-2 py-1 rounded text-sm ${getSeverityBadgeColor(flag.severity)}">
+                            ${flag.severity}
+                        </span>
+                    </div>
+                    <div class="text-gray-600 mt-2">${flag.recommendation}</div>
+                </div>
+            `).join('');
+            document.getElementById('flagsContent').innerHTML = flagsHtml;
+
             resultsSection.classList.remove('hidden');
+        }
+
+        function getSeverityColor(severity) {
+            switch (severity.toUpperCase()) {
+                case 'HIGH':
+                    return 'bg-red-50';
+                case 'MEDIUM':
+                    return 'bg-yellow-50';
+                case 'LOW':
+                    return 'bg-blue-50';
+                default:
+                    return 'bg-gray-50';
+            }
+        }
+
+        function getSeverityBadgeColor(severity) {
+            switch (severity.toUpperCase()) {
+                case 'HIGH':
+                    return 'bg-red-100 text-red-800';
+                case 'MEDIUM':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'LOW':
+                    return 'bg-blue-100 text-blue-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
         }
 
         function addToQAHistory(question, answer) {
