@@ -48,17 +48,17 @@
                 </div>
 
                 <!-- Q&A Section -->
-                <div class="mt-8">
+                <div class="mt-8 border-t pt-6">
                     <h2 class="text-xl font-semibold mb-3">Ask Questions</h2>
-                    <div class="flex space-x-2">
+                    <form id="questionForm" class="flex space-x-2">
                         <input type="text" id="questionInput" 
                                class="flex-1 border rounded-lg px-4 py-2" 
                                placeholder="Ask a question about the contract...">
-                        <button id="askBtn" 
+                        <button type="submit" id="askBtn" 
                                 class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
                             Ask
                         </button>
-                    </div>
+                    </form>
                     <div id="qaHistory" class="mt-4 space-y-4"></div>
                 </div>
             </div>
@@ -66,13 +66,7 @@
             <!-- Loading State -->
             <div id="loadingState" class="hidden text-center py-8">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p class="mt-4 text-gray-600">Analyzing contract...</p>
-            </div>
-
-            <!-- Debug Info -->
-            <div id="debugInfo" class="mt-4 p-4 bg-gray-100 rounded-lg hidden">
-                <h3 class="font-semibold">Debug Information</h3>
-                <pre id="debugContent" class="mt-2 text-sm whitespace-pre-wrap"></pre>
+                <p class="mt-4 text-gray-600">Processing...</p>
             </div>
         </div>
     </div>
@@ -87,17 +81,9 @@
         const analyzeBtn = document.getElementById('analyzeBtn');
         const loadingState = document.getElementById('loadingState');
         const resultsSection = document.getElementById('resultsSection');
+        const questionForm = document.getElementById('questionForm');
         const questionInput = document.getElementById('questionInput');
-        const askBtn = document.getElementById('askBtn');
         const qaHistory = document.getElementById('qaHistory');
-        const debugInfo = document.getElementById('debugInfo');
-        const debugContent = document.getElementById('debugContent');
-
-        // Debug Function
-        function showDebug(info) {
-            debugInfo.classList.remove('hidden');
-            debugContent.textContent = JSON.stringify(info, null, 2);
-        }
 
         // File Upload Handling
         fileInput.addEventListener('change', handleFileSelect);
@@ -139,23 +125,20 @@
 
             try {
                 showLoading(true);
-                debugInfo.classList.add('hidden');
-                
                 const response = await fetch(`${BACKEND_URL}/analyze`, {
                     method: 'POST',
                     body: formData
                 });
 
                 const data = await response.json();
-                showDebug({ status: response.status, data: data });
-
+                
                 if (!response.ok) {
-                    throw new Error(data.detail || JSON.stringify(data) || 'Analysis failed');
+                    throw new Error(data.detail || 'Analysis failed');
                 }
 
                 displayResults(data);
             } catch (error) {
-                console.error('Full error:', error);
+                console.error('Analysis error:', error);
                 alert('Error analyzing contract: ' + error.message);
             } finally {
                 showLoading(false);
@@ -163,7 +146,8 @@
         });
 
         // Q&A Handling
-        askBtn.addEventListener('click', async () => {
+        questionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
             const question = questionInput.value.trim();
             if (!question || !currentFile) return;
 
@@ -172,7 +156,9 @@
             formData.append('question', question);
 
             try {
-                const questionElement = addToQAHistory(question, '...');
+                const questionElement = addToQAHistory(question, 'Thinking...');
+                showLoading(true);
+
                 const response = await fetch(`${BACKEND_URL}/ask`, {
                     method: 'POST',
                     body: formData
@@ -189,13 +175,14 @@
             } catch (error) {
                 console.error('Q&A error:', error);
                 alert('Error getting answer: ' + error.message);
+            } finally {
+                showLoading(false);
             }
         });
 
         // Display Functions
         function showLoading(show) {
             loadingState.classList.toggle('hidden', !show);
-            resultsSection.classList.toggle('hidden', show);
         }
 
         function displayResults(result) {
