@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Legal Document Analyzer</title>
+    <title>Legal Document Analyzer Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50">
-    <div class="max-w-6xl mx-auto p-6">
+    <div class="max-w-7xl mx-auto p-6">
         <div class="bg-white rounded-lg shadow-lg p-6">
-            <h1 class="text-2xl font-bold mb-6">Legal Document Analyzer</h1>
+            <h1 class="text-2xl font-bold mb-6">Legal Document Analyzer Pro</h1>
             
             <!-- Upload Section -->
             <div class="mb-8">
@@ -31,59 +31,100 @@
 
             <!-- Results Section -->
             <div id="resultsSection" class="hidden">
-                <!-- Document Type Info -->
-                <div class="mb-6 p-4 bg-blue-50 rounded-lg">
-                    <h2 class="text-xl font-semibold mb-2">Document Type</h2>
-                    <div id="documentTypeContent"></div>
-                </div>
-
-                <!-- Analysis Results -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Left Column -->
-                    <div class="space-y-6">
-                        <div>
-                            <h2 class="text-xl font-semibold mb-3">Summary</h2>
-                            <div id="summaryContent" class="bg-gray-50 rounded-lg p-4"></div>
-                        </div>
-
-                        <div>
-                            <h2 class="text-xl font-semibold mb-3">Key Terms</h2>
-                            <div id="keyTermsContent" class="space-y-2"></div>
-                        </div>
-
-                        <div>
-                            <h2 class="text-xl font-semibold mb-3">Important Dates</h2>
-                            <div id="datesContent" class="space-y-2"></div>
-                        </div>
+                <!-- Document Info Header -->
+                <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Document Type -->
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <h2 class="text-xl font-semibold mb-2">Document Information</h2>
+                        <div id="documentTypeContent"></div>
                     </div>
-
-                    <!-- Right Column -->
-                    <div class="space-y-6">
-                        <div>
-                            <h2 class="text-xl font-semibold mb-3">Risk Analysis</h2>
-                            <div id="risksContent" class="space-y-2"></div>
-                        </div>
-
-                        <div>
-                            <h2 class="text-xl font-semibold mb-3">Red Flags</h2>
-                            <div id="flagsContent" class="space-y-2"></div>
-                        </div>
+                    <!-- Quick Stats -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h2 class="text-xl font-semibold mb-2">Quick Analysis</h2>
+                        <div id="quickStatsContent"></div>
                     </div>
                 </div>
 
-                <!-- Q&A Section -->
-                <div class="mt-8 border-t pt-6">
-                    <h2 class="text-xl font-semibold mb-3">Ask Questions</h2>
-                    <form id="questionForm" class="flex space-x-2">
-                        <input type="text" id="questionInput" 
-                               class="flex-1 border rounded-lg px-4 py-2" 
-                               placeholder="Ask a question about the document...">
-                        <button type="submit" id="askBtn" 
-                                class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
-                            Ask
-                        </button>
-                    </form>
-                    <div id="qaHistory" class="mt-4 space-y-4"></div>
+                <!-- Main Tabs Navigation -->
+                <div class="mb-6">
+                    <div class="border-b border-gray-200">
+                        <nav class="flex space-x-4" aria-label="Tabs">
+                            <button class="tab-button px-3 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600" data-tab="overview">Overview</button>
+                            <button class="tab-button px-3 py-2 text-sm font-medium" data-tab="clauses">Clause Analysis</button>
+                            <button class="tab-button px-3 py-2 text-sm font-medium" data-tab="risks">Risks & Flags</button>
+                            <button class="tab-button px-3 py-2 text-sm font-medium" data-tab="qa">Q&A</button>
+                        </nav>
+                    </div>
+
+                    <!-- Overview Tab Content -->
+                    <div id="overview-tab" class="tab-content">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                            <div class="space-y-6">
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-3">Summary</h3>
+                                    <div id="summaryContent" class="bg-gray-50 rounded-lg p-4"></div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-3">Key Terms</h3>
+                                    <div id="keyTermsContent" class="space-y-2"></div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-3">Important Dates</h3>
+                                    <div id="datesContent" class="space-y-2"></div>
+                                </div>
+                            </div>
+                            <div class="space-y-6">
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-3">Action Items</h3>
+                                    <div id="actionItemsContent" class="space-y-2"></div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-3">Flags</h3>
+                                    <div id="flagsContent" class="space-y-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clause Analysis Tab Content -->
+                    <div id="clauses-tab" class="tab-content hidden">
+                        <div class="mt-4 space-y-6">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-3">Key Clauses</h3>
+                                <div id="clausesContent" class="space-y-4"></div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold mb-3">Missing Clauses</h3>
+                                <div id="missingClausesContent" class="bg-yellow-50 rounded-lg p-4"></div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold mb-3">Unusual Provisions</h3>
+                                <div id="unusualProvisionsContent" class="bg-red-50 rounded-lg p-4"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Risks Tab Content -->
+                    <div id="risks-tab" class="tab-content hidden">
+                        <div class="mt-4">
+                            <div id="risksContent" class="space-y-4"></div>
+                        </div>
+                    </div>
+
+                    <!-- Q&A Tab Content -->
+                    <div id="qa-tab" class="tab-content hidden">
+                        <div class="mt-4">
+                            <form id="questionForm" class="flex space-x-2">
+                                <input type="text" id="questionInput" 
+                                       class="flex-1 border rounded-lg px-4 py-2" 
+                                       placeholder="Ask a question about the document...">
+                                <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
+                                    Ask
+                                </button>
+                            </form>
+                            <div id="qaHistory" class="mt-4 space-y-4"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -93,9 +134,7 @@
                 <p class="mt-4 text-gray-600">Analyzing document...</p>
             </div>
         </div>
-    </div>
-
-    <script>
+    </div><script>
         const BACKEND_URL = 'https://contract-analyzer-backend.onrender.com';
         let currentFile = null;
 
@@ -108,6 +147,21 @@
         const questionForm = document.getElementById('questionForm');
         const questionInput = document.getElementById('questionInput');
         const qaHistory = document.getElementById('qaHistory');
+
+        // Tab Handling
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons and hide all content
+                document.querySelectorAll('.tab-button').forEach(b => {
+                    b.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
+                });
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                
+                // Add active class to clicked button and show its content
+                button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
+                document.getElementById(`${button.dataset.tab}-tab`).classList.remove('hidden');
+            });
+        });
 
         // File Upload Handling
         fileInput.addEventListener('change', function(e) {
@@ -206,24 +260,48 @@
             }
         });
 
-        // Display Functions
+        // Helper Functions
         function showLoading(show) {
             loadingState.classList.toggle('hidden', !show);
         }
 
+        function getCategoryColor(category) {
+            const colors = {
+                'FINANCIAL': 'bg-green-100 text-green-800',
+                'LEGAL': 'bg-blue-100 text-blue-800',
+                'OPERATIONAL': 'bg-yellow-100 text-yellow-800',
+                'HIGH': 'bg-red-100 text-red-800',
+                'MEDIUM': 'bg-yellow-100 text-yellow-800',
+                'LOW': 'bg-blue-100 text-blue-800'
+            };
+            return colors[category] || 'bg-gray-100 text-gray-800';
+        }
+// Display Functions
         function displayResults(data) {
             // Display document type info
             const docType = data.document_type;
             const docTypeHtml = `
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="font-medium">Type: ${docType.type}</p>
-                        <p class="text-sm text-gray-600">Confidence: ${(docType.confidence * 100).toFixed(1)}%</p>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium">Type:</span>
+                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded">${docType.type}</span>
                     </div>
-                    <div class="text-sm text-gray-600">
-                        <p>Indicators:</p>
-                        <ul class="list-disc pl-4">
-                            ${docType.indicators.map(i => `<li>${i}</li>`).join('')}
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium">Confidence:</span>
+                        <span>${(docType.confidence * 100).toFixed(1)}%</span>
+                    </div>
+                    <div>
+                        <span class="font-medium">Industry:</span>
+                        <span>${docType.industry || 'Not specified'}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium">Jurisdiction:</span>
+                        <span>${docType.jurisdiction || 'Not specified'}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium">Indicators:</span>
+                        <ul class="list-disc pl-4 mt-1">
+                            ${docType.indicators.map(i => `<li class="text-sm">${i}</li>`).join('')}
                         </ul>
                     </div>
                 </div>
@@ -238,8 +316,13 @@
             // Display key terms
             const keyTermsHtml = analysis.key_terms.map(term => `
                 <div class="bg-white shadow rounded-lg p-4">
-                    <div class="font-medium">${term.term}</div>
-                    <div class="text-gray-600">${term.value}</div>
+                    <div class="flex justify-between items-start">
+                        <div class="font-medium">${term.term}</div>
+                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(term.category)}">
+                            ${term.category}
+                        </span>
+                    </div>
+                    <div class="text-gray-600 mt-1">${term.value}</div>
                 </div>
             `).join('');
             document.getElementById('keyTermsContent').innerHTML = keyTermsHtml;
@@ -247,53 +330,84 @@
             // Display dates
             const datesHtml = analysis.dates.map(date => `
                 <div class="bg-white shadow rounded-lg p-4">
-                    <div class="font-medium">${date.event}</div>
-                    <div class="text-gray-600">${date.date}</div>
+                    <div class="flex justify-between items-start">
+                        <div class="font-medium">${date.event}</div>
+                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(date.importance)}">
+                            ${date.importance}
+                        </span>
+                    </div>
+                    <div class="text-gray-600 mt-1">${date.date}</div>
                 </div>
             `).join('');
             document.getElementById('datesContent').innerHTML = datesHtml;
 
             // Display risks
             const risksHtml = analysis.risks.map(risk => `
-                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                    ${risk}
+                <div class="bg-white shadow rounded-lg p-4">
+                    <div class="flex justify-between items-start">
+                        <div class="font-medium">${risk.description}</div>
+                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(risk.severity)}">
+                            ${risk.severity}
+                        </span>
+                    </div>
+                    <div class="text-sm text-gray-600 mt-1">Category: ${risk.category}</div>
                 </div>
             `).join('');
             document.getElementById('risksContent').innerHTML = risksHtml;
 
-            // Display flags
-            const flagsHtml = analysis.flags.map(flag => `
-                <div class="border rounded-lg p-4 ${getSeverityBgColor(flag.severity)}">
-                    <div class="font-medium flex items-center justify-between">
-                        <span>${flag.issue}</span>
-                        <span class="px-2 py-1 rounded text-sm ${getSeverityTextColor(flag.severity)}">
-                            ${flag.severity}
-                        </span>
+            // Display clause analysis if available
+            if (analysis.clause_analysis) {
+                const clausesHtml = analysis.clause_analysis.clauses.map(clause => `
+                    <div class="bg-white shadow rounded-lg p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="font-medium">${clause.type}</div>
+                            <span class="text-xs px-2 py-1 rounded ${clause.is_standard ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                                ${clause.is_standard ? 'Standard' : 'Non-Standard'}
+                            </span>
+                        </div>
+                        <div class="text-gray-600 mb-2">${clause.text}</div>
+                        ${clause.risks.length > 0 ? `
+                            <div class="mt-2">
+                                <div class="text-sm font-medium">Risks:</div>
+                                <ul class="list-disc pl-4 text-sm text-red-600">
+                                    ${clause.risks.map(risk => `<li>${risk}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        ${clause.recommendations.length > 0 ? `
+                            <div class="mt-2">
+                                <div class="text-sm font-medium">Recommendations:</div>
+                                <ul class="list-disc pl-4 text-sm text-blue-600">
+                                    ${clause.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
                     </div>
-                    <div class="text-gray-600 mt-2">${flag.recommendation}</div>
-                </div>
-            `).join('');
-            document.getElementById('flagsContent').innerHTML = flagsHtml;
+                `).join('');
+                document.getElementById('clausesContent').innerHTML = clausesHtml;
+
+                // Display missing clauses
+                const missingClausesHtml = analysis.clause_analysis.missing_clauses.length > 0 
+                    ? `<ul class="list-disc pl-4">
+                        ${analysis.clause_analysis.missing_clauses.map(clause => `
+                            <li class="text-yellow-800">${clause}</li>
+                        `).join('')}
+                    </ul>`
+                    : '<p class="text-green-800">No missing standard clauses detected.</p>';
+                document.getElementById('missingClausesContent').innerHTML = missingClausesHtml;
+
+                // Display unusual provisions
+                const unusualProvisionsHtml = analysis.clause_analysis.unusual_provisions.length > 0
+                    ? `<ul class="list-disc pl-4">
+                        ${analysis.clause_analysis.unusual_provisions.map(provision => `
+                            <li class="text-red-800">${provision}</li>
+                        `).join('')}
+                    </ul>`
+                    : '<p class="text-green-800">No unusual provisions detected.</p>';
+                document.getElementById('unusualProvisionsContent').innerHTML = unusualProvisionsHtml;
+            }
 
             resultsSection.classList.remove('hidden');
-        }
-
-        function getSeverityBgColor(severity) {
-            switch (severity.toUpperCase()) {
-                case 'HIGH': return 'bg-red-50';
-                case 'MEDIUM': return 'bg-yellow-50';
-                case 'LOW': return 'bg-blue-50';
-                default: return 'bg-gray-50';
-            }
-        }
-
-        function getSeverityTextColor(severity) {
-            switch (severity.toUpperCase()) {
-                case 'HIGH': return 'bg-red-100 text-red-800';
-                case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
-                case 'LOW': return 'bg-blue-100 text-blue-800';
-                default: return 'bg-gray-100 text-gray-800';
-            }
         }
 
         function addToQAHistory(question, answer) {
