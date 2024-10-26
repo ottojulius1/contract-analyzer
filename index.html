@@ -311,6 +311,29 @@
 
             const analysis = data.analysis;
 
+            // Display quick stats
+            const quickStatsHtml = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-3 bg-white rounded-lg shadow">
+                        <div class="text-sm text-gray-600">Key Terms</div>
+                        <div class="text-xl font-semibold">${analysis.key_terms?.length || 0}</div>
+                    </div>
+                    <div class="p-3 bg-white rounded-lg shadow">
+                        <div class="text-sm text-gray-600">Important Dates</div>
+                        <div class="text-xl font-semibold">${analysis.dates?.length || 0}</div>
+                    </div>
+                    <div class="p-3 bg-white rounded-lg shadow">
+                        <div class="text-sm text-gray-600">Risks Identified</div>
+                        <div class="text-xl font-semibold">${analysis.risks?.length || 0}</div>
+                    </div>
+                    <div class="p-3 bg-white rounded-lg shadow">
+                        <div class="text-sm text-gray-600">Clauses Analyzed</div>
+                        <div class="text-xl font-semibold">${analysis.clause_analysis?.clauses?.length || 0}</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('quickStatsContent').innerHTML = quickStatsHtml;
+
             // Display summary
             document.getElementById('summaryContent').textContent = analysis.summary;
             
@@ -346,12 +369,16 @@
             const risksHtml = analysis.risks.map(risk => `
                 <div class="bg-white shadow rounded-lg p-4">
                     <div class="flex justify-between items-start">
-                        <div class="font-medium">${risk.description}</div>
-                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(risk.severity)}">
-                            ${risk.severity}
-                        </span>
+                        <div class="font-medium">${risk.description || risk}</div>
+                        ${risk.severity ? `
+                            <span class="text-xs px-2 py-1 rounded ${getCategoryColor(risk.severity)}">
+                                ${risk.severity}
+                            </span>
+                        ` : ''}
                     </div>
-                    <div class="text-sm text-gray-600 mt-1">Category: ${risk.category}</div>
+                    ${risk.category ? `
+                        <div class="text-sm text-gray-600 mt-1">Category: ${risk.category}</div>
+                    ` : ''}
                 </div>
             `).join('');
             document.getElementById('risksContent').innerHTML = risksHtml;
@@ -367,7 +394,7 @@
                             </span>
                         </div>
                         <div class="text-gray-600 mb-2">${clause.text}</div>
-                        ${clause.risks.length > 0 ? `
+                        ${clause.risks?.length > 0 ? `
                             <div class="mt-2">
                                 <div class="text-sm font-medium">Risks:</div>
                                 <ul class="list-disc pl-4 text-sm text-red-600">
@@ -375,7 +402,7 @@
                                 </ul>
                             </div>
                         ` : ''}
-                        ${clause.recommendations.length > 0 ? `
+                        ${clause.recommendations?.length > 0 ? `
                             <div class="mt-2">
                                 <div class="text-sm font-medium">Recommendations:</div>
                                 <ul class="list-disc pl-4 text-sm text-blue-600">
@@ -388,7 +415,7 @@
                 document.getElementById('clausesContent').innerHTML = clausesHtml;
 
                 // Display missing clauses
-                const missingClausesHtml = analysis.clause_analysis.missing_clauses.length > 0 
+                const missingClausesHtml = analysis.clause_analysis.missing_clauses?.length > 0 
                     ? `<ul class="list-disc pl-4">
                         ${analysis.clause_analysis.missing_clauses.map(clause => `
                             <li class="text-yellow-800">${clause}</li>
@@ -398,7 +425,7 @@
                 document.getElementById('missingClausesContent').innerHTML = missingClausesHtml;
 
                 // Display unusual provisions
-                const unusualProvisionsHtml = analysis.clause_analysis.unusual_provisions.length > 0
+                const unusualProvisionsHtml = analysis.clause_analysis.unusual_provisions?.length > 0
                     ? `<ul class="list-disc pl-4">
                         ${analysis.clause_analysis.unusual_provisions.map(provision => `
                             <li class="text-red-800">${provision}</li>
