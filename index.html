@@ -309,8 +309,34 @@
             `;
             document.getElementById('documentTypeContent').innerHTML = docTypeHtml;
 
-            const analysis = data.analysis;
+document.getElementById('documentTypeContent').innerHTML = docTypeHtml;
 
+const analysis = data.analysis;
+
+// Display quick stats
+const quickStatsHtml = `
+    <div class="grid grid-cols-2 gap-4">
+        <div class="p-3 bg-white rounded-lg shadow">
+            <div class="text-sm text-gray-600">Key Terms</div>
+            <div class="text-xl font-semibold">${analysis.key_terms?.length || 0}</div>
+        </div>
+        <div class="p-3 bg-white rounded-lg shadow">
+            <div class="text-sm text-gray-600">Important Dates</div>
+            <div class="text-xl font-semibold">${analysis.dates?.length || 0}</div>
+        </div>
+        <div class="p-3 bg-white rounded-lg shadow">
+            <div class="text-sm text-gray-600">Risks Identified</div>
+            <div class="text-xl font-semibold">${analysis.risks?.length || 0}</div>
+        </div>
+        <div class="p-3 bg-white rounded-lg shadow">
+            <div class="text-sm text-gray-600">Clauses Analyzed</div>
+            <div class="text-xl font-semibold">${analysis.clause_analysis?.clauses?.length || 0}</div>
+        </div>
+    </div>
+`;
+document.getElementById('quickStatsContent').innerHTML = quickStatsHtml;
+
+// Display summary
             // Display quick stats
             const quickStatsHtml = `
                 <div class="grid grid-cols-2 gap-4">
