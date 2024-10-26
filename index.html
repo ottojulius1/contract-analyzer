@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Legal Document Analyzer</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50">
@@ -93,6 +92,12 @@
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
                 <p class="mt-4 text-gray-600">Analyzing document...</p>
             </div>
+
+            <!-- Debug Info -->
+            <div id="debugInfo" class="mt-4 p-4 bg-gray-100 rounded-lg hidden">
+                <h3 class="font-semibold">Debug Information</h3>
+                <pre id="debugContent" class="mt-2 text-sm whitespace-pre-wrap"></pre>
+            </div>
         </div>
     </div>
 
@@ -109,16 +114,28 @@
         const questionForm = document.getElementById('questionForm');
         const questionInput = document.getElementById('questionInput');
         const qaHistory = document.getElementById('qaHistory');
+        const debugInfo = document.getElementById('debugInfo');
+        const debugContent = document.getElementById('debugContent');
+
+        function showDebug(info) {
+            debugInfo.classList.remove('hidden');
+            debugContent.textContent = JSON.stringify(info, null, 2);
+        }
 
         // File Upload Handling
-        fileInput.addEventListener('change', handleFileSelect);
+        fileInput.addEventListener('change', function(e) {
+            handleFile(e.target.files[0]);
+        });
+
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             dropZone.classList.add('border-blue-500');
         });
+
         dropZone.addEventListener('dragleave', () => {
             dropZone.classList.remove('border-blue-500');
         });
+
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropZone.classList.remove('border-blue-500');
@@ -145,15 +162,19 @@
 
             try {
                 showLoading(true);
+                resultsSection.classList.add('hidden');
+                debugInfo.classList.add('hidden');
+                
                 const response = await fetch(`${BACKEND_URL}/analyze`, {
                     method: 'POST',
                     body: formData
                 });
 
                 const data = await response.json();
+                showDebug({ status: response.status, data: data });
                 
                 if (!response.ok) {
-                    throw new Error(data.detail || 'Analysis failed');
+                    throw new Error(data.detail || JSON.stringify(data) || 'Analysis failed');
                 }
 
                 displayResults(data);
