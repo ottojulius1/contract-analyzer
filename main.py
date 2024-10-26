@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from openai import OpenAI
@@ -25,10 +25,6 @@ app.add_middleware(
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-@app.get("/")
-async def root():
-    return {"message": "Contract Analyzer API is running"}
-
 def extract_text_from_pdf(file_bytes):
     try:
         pdf_file = io.BytesIO(file_bytes)
@@ -43,20 +39,10 @@ def extract_text_from_pdf(file_bytes):
 
 @app.post("/analyze")
 async def analyze_contract(file: UploadFile = File(...)):
-    logger.info(f"Received file: {file.filename}")
-    
     try:
-        # Read and extract text from PDF
         contents = await file.read()
         text = extract_text_from_pdf(contents)
         
-        if not text.strip():
-            return JSONResponse(
-                status_code=400,
-                content={"detail": "No text could be extracted from the PDF"}
-            )
-        
-        # Analyze with OpenAI
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -79,10 +65,7 @@ async def analyze_contract(file: UploadFile = File(...)):
             temperature=0.2
         )
         
-        # Get the response content
         analysis = response.choices[0].message.content
-        
-        # Return the analysis
         return JSONResponse(content=eval(analysis))
 
     except Exception as e:
@@ -93,19 +76,16 @@ async def analyze_contract(file: UploadFile = File(...)):
         )
 
 @app.post("/ask")
-async def ask_question(file: UploadFile = File(...), question: str = ""):
-    if not question:
-        return JSONResponse(
-            status_code=400,
-            content={"detail": "Question is required"}
-        )
+async def ask_question(
+    file: UploadFile = File(...),
+    question: str = Form(...)  # Changed this line to use Form
+):
+    logger.info(f"Received question: {question}")
     
     try:
-        # Read and extract text
         contents = await file.read()
         text = extract_text_from_pdf(contents)
         
-        # Ask OpenAI
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -115,7 +95,10 @@ async def ask_question(file: UploadFile = File(...), question: str = ""):
             temperature=0.3
         )
         
-        return JSONResponse(content={"answer": response.choices[0].message.content})
+        answer = response.choices[0].message.content
+        logger.info(f"Generated answer: {answer}")
+        
+        return JSONResponse(content={"answer": answer})
         
     except Exception as e:
         logger.error(f"Question error: {str(e)}")
@@ -124,6 +107,14 @@ async def ask_question(file: UploadFile = File(...), question: str = ""):
             content={"detail": f"Question error: {str(e)}"}
         )
 
+@app.get("/")
+async def root():
+    return {"message": "Contract Analyzer API is running"}
+
 @app.options("/analyze")
 async def analyze_options():
+    return JSONResponse(content={})
+
+@app.options("/ask")
+async def ask_options():
     return JSONResponse(content={})
