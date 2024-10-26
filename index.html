@@ -92,12 +92,6 @@
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
                 <p class="mt-4 text-gray-600">Analyzing document...</p>
             </div>
-
-            <!-- Debug Info -->
-            <div id="debugInfo" class="mt-4 p-4 bg-gray-100 rounded-lg hidden">
-                <h3 class="font-semibold">Debug Information</h3>
-                <pre id="debugContent" class="mt-2 text-sm whitespace-pre-wrap"></pre>
-            </div>
         </div>
     </div>
 
@@ -114,13 +108,6 @@
         const questionForm = document.getElementById('questionForm');
         const questionInput = document.getElementById('questionInput');
         const qaHistory = document.getElementById('qaHistory');
-        const debugInfo = document.getElementById('debugInfo');
-        const debugContent = document.getElementById('debugContent');
-
-        function showDebug(info) {
-            debugInfo.classList.remove('hidden');
-            debugContent.textContent = JSON.stringify(info, null, 2);
-        }
 
         // File Upload Handling
         fileInput.addEventListener('change', function(e) {
@@ -163,7 +150,6 @@
             try {
                 showLoading(true);
                 resultsSection.classList.add('hidden');
-                debugInfo.classList.add('hidden');
                 
                 const response = await fetch(`${BACKEND_URL}/analyze`, {
                     method: 'POST',
@@ -171,7 +157,6 @@
                 });
 
                 const data = await response.json();
-                showDebug({ status: response.status, data: data });
                 
                 if (!response.ok) {
                     throw new Error(data.detail || JSON.stringify(data) || 'Analysis failed');
@@ -278,10 +263,10 @@
 
             // Display flags
             const flagsHtml = analysis.flags.map(flag => `
-                <div class="border rounded-lg p-4 ${getSeverityColor(flag.severity)}">
+                <div class="border rounded-lg p-4 ${getSeverityBgColor(flag.severity)}">
                     <div class="font-medium flex items-center justify-between">
                         <span>${flag.issue}</span>
-                        <span class="px-2 py-1 rounded text-sm ${getSeverityBadgeColor(flag.severity)}">
+                        <span class="px-2 py-1 rounded text-sm ${getSeverityTextColor(flag.severity)}">
                             ${flag.severity}
                         </span>
                     </div>
@@ -293,29 +278,21 @@
             resultsSection.classList.remove('hidden');
         }
 
-        function getSeverityColor(severity) {
+        function getSeverityBgColor(severity) {
             switch (severity.toUpperCase()) {
-                case 'HIGH':
-                    return 'bg-red-50';
-                case 'MEDIUM':
-                    return 'bg-yellow-50';
-                case 'LOW':
-                    return 'bg-blue-50';
-                default:
-                    return 'bg-gray-50';
+                case 'HIGH': return 'bg-red-50';
+                case 'MEDIUM': return 'bg-yellow-50';
+                case 'LOW': return 'bg-blue-50';
+                default: return 'bg-gray-50';
             }
         }
 
-        function getSeverityBadgeColor(severity) {
+        function getSeverityTextColor(severity) {
             switch (severity.toUpperCase()) {
-                case 'HIGH':
-                    return 'bg-red-100 text-red-800';
-                case 'MEDIUM':
-                    return 'bg-yellow-100 text-yellow-800';
-                case 'LOW':
-                    return 'bg-blue-100 text-blue-800';
-                default:
-                    return 'bg-gray-100 text-gray-800';
+                case 'HIGH': return 'bg-red-100 text-red-800';
+                case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
+                case 'LOW': return 'bg-blue-100 text-blue-800';
+                default: return 'bg-gray-100 text-gray-800';
             }
         }
 
