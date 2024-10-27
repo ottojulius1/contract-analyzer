@@ -571,9 +571,10 @@
             return colors[category] || 'bg-gray-100 text-gray-800';
         }
 
-function displayResults(data) {
+        function displayResults(data) {
+            logDebug('Displaying analysis results');
             const docType = data.document_type;
-            const docTypeHtml = `
+            const docTypeHtml = 
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
                         <span class="font-medium">Type:</span>
@@ -594,17 +595,17 @@ function displayResults(data) {
                     <div>
                         <span class="font-medium">Indicators:</span>
                         <ul class="list-disc pl-4 mt-1">
-                            ${docType.indicators.map(i => `<li class="text-sm">${i}</li>`).join('')}
+                            ${docType.indicators.map(i => <li class="text-sm">${i}</li>).join('')}
                         </ul>
                     </div>
                 </div>
-            `;
+            ;
             document.getElementById('documentTypeContent').innerHTML = docTypeHtml;
 
             const analysis = data.analysis;
 
             // Display quick stats
-            const quickStatsHtml = `
+            const quickStatsHtml = 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="p-3 bg-white rounded-lg shadow">
                         <div class="text-sm text-gray-600">Key Terms</div>
@@ -623,51 +624,8 @@ function displayResults(data) {
                         <div class="text-xl font-semibold">${analysis.clause_analysis?.clauses?.length || 0}</div>
                     </div>
                 </div>
-            `;
+            ;
             document.getElementById('quickStatsContent').innerHTML = quickStatsHtml;
-
-            // Display clause analysis
-            const clauseAnalysis = data.analysis.clause_analysis || {};
-            
-            // Display key clauses
-            const keyClausesHtml = clauseAnalysis.key_clauses?.map(clause => `
-                <div class="bg-white shadow rounded-lg p-4 mb-4">
-                    <div class="flex justify-between items-start">
-                        <div class="font-medium">${clause.title || ''}</div>
-                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(clause.importance || 'LOW')}">
-                            ${clause.importance || 'LOW'}
-                        </span>
-                    </div>
-                    <div class="text-gray-600 mt-2">${clause.content || ''}</div>
-                </div>
-            `).join('') || '<div class="text-gray-500 p-4">No key clauses identified</div>';
-            document.getElementById('clausesContent').innerHTML = keyClausesHtml;
-
-            // Display missing clauses
-            const missingClausesHtml = clauseAnalysis.missing_clauses?.map(clause => `
-                <div class="bg-yellow-50 rounded-lg p-4 mb-2">
-                    <div class="font-medium text-yellow-800">${clause.clause || ''}</div>
-                    <div class="text-yellow-700 mt-1">${clause.recommendation || ''}</div>
-                </div>
-            `).join('') || '<div class="text-gray-500">No missing clauses identified</div>';
-            document.getElementById('missingClausesContent').innerHTML = missingClausesHtml;
-
-            // Display unusual provisions
-            const unusualProvisionsHtml = clauseAnalysis.unusual_provisions?.map(provision => `
-                <div class="bg-red-50 rounded-lg p-4 mb-2">
-                    <div class="flex justify-between items-start">
-                        <div class="font-medium text-red-800">${provision.provision || ''}</div>
-                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(provision.risk_level || 'LOW')}">
-                            ${provision.risk_level || 'LOW'}
-                        </span>
-                    </div>
-                    <div class="text-red-700 mt-1">${provision.explanation || ''}</div>
-                </div>
-            `).join('') || '<div class="text-gray-500">No unusual provisions identified</div>';
-            document.getElementById('unusualProvisionsContent').innerHTML = unusualProvisionsHtml;
-
-            resultsSection.classList.remove('hidden');
-        }
 
             // Display summary
             document.getElementById('summaryContent').textContent = analysis.summary;
