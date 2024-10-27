@@ -8,6 +8,8 @@ import io
 import os
 import json
 import logging
+import difflib
+from datetime import datetime
 import re
 
 # Set up logging
@@ -28,17 +30,25 @@ app.add_middleware(
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Define key clause types to analyze
-KEY_CLAUSES = {
-    "CONFIDENTIALITY": ["confidentiality", "non-disclosure", "private information"],
-    "TERMINATION": ["termination", "contract end", "contract cessation"],
-    "INDEMNIFICATION": ["indemnify", "indemnification", "hold harmless"],
-    "GOVERNING_LAW": ["governing law", "jurisdiction", "applicable law"],
-    "PAYMENT_TERMS": ["payment terms", "compensation", "fees"],
-    "LIMITATION_LIABILITY": ["limitation of liability", "liability cap", "damages limit"],
-    "INTELLECTUAL_PROPERTY": ["intellectual property", "IP rights", "copyright"],
-    "FORCE_MAJEURE": ["force majeure", "act of god", "unforeseen circumstances"]
-}
+def clean_json_string(s: str) -> str:
+    """Clean and extract JSON from a string that might contain markdown or other text."""
+    json_match = re.search(r'```json\s*(.*?)\s*```', s, re.DOTALL)
+    if json_match:
+        s = json_match.group(1)
+    else:
+        json_match = re.search(r'`(.*?)`', s, re.DOTALL)
+        if json_match:
+            s = json_match.group(1)
+    return s.strip()
+
+def parse_json_response(response_text: str) -> Dict:
+    """Safely parse JSON from API response."""
+    try:
+        cleaned_text = clean_json_string(response_text)
+        return json.loads(cleaned_text)
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON Parse Error: {str(e)}\nText: {response_text}")
+        raise ValueError(f"Failed to parse JSON response: {str(e)}")
 
 def extract_text_from_pdf(file_bytes):
     try:
@@ -52,58 +62,81 @@ def extract_text_from_pdf(file_bytes):
         logger.error(f"PDF extraction error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"PDF extraction failed: {str(e)}")
 
-def analyze_clauses(text: str) -> Dict:
-    """Analyze specific clauses in the document."""
+def compare_documents(text1: str, text2: str) -> Dict:
+    """Compare two document texts and return the differences."""
     try:
+        # Use difflib for initial comparison
+        differ = difflib.Differ()
+        diff = list(differ.compare(text1.splitlines(), text2.splitlines()))
+        
+        # Use AI for detailed analysis
+        comparison_prompt = f"""Compare these two versions of the document and provide analysis in this JSON format:
+        {{
+            "summary_of_changes": "brief overview of main differences",
+            "significant_changes": [
+                {{"section": "section name", "change": "description of change", "impact": "HIGH/MEDIUM/LOW"}}
+            ],
+            "added_clauses": ["new clause 1", "new clause 2"],
+            "removed_clauses": ["removed clause 1", "removed clause 2"],
+            "modified_clauses": [
+                {{"clause": "clause name", "original": "old text", "new": "new text", "impact": "HIGH/MEDIUM/LOW"}}
+            ],
+            "risk_analysis": [
+                {{"risk": "description", "severity": "HIGH/MEDIUM/LOW", "recommendation": "suggested action"}}
+            ]
+        }}
+        
+        Document 1:
+        {text1[:4000]}
+        
+        Document 2:
+        {text2[:4000]}
+        """
+        
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": """Analyze the legal document and extract key clauses. 
-                For each clause, provide:
-                1. The exact text or summary
-                2. Whether it's standard or non-standard language
-                3. Potential risks or issues
-                4. Recommendations for improvement
-
-                Return ONLY a JSON object in this format:
-                {
-                    "clauses": [
-                        {
-                            "type": "clause type",
-                            "text": "extracted text or summary",
-                            "is_standard": true/false,
-                            "risks": ["risk 1", "risk 2"],
-                            "recommendations": ["recommendation 1", "recommendation 2"],
-                            "standard_deviation": "explanation of how it differs from standard language",
-                            "importance": "HIGH/MEDIUM/LOW"
-                        }
-                    ],
-                    "missing_clauses": ["important clause type 1", "important clause type 2"],
-                    "unusual_provisions": ["unusual provision 1", "unusual provision 2"]
-                }"""},
-                {"role": "user", "content": f"Analyze these clauses:\n\n{text}"}
+                {"role": "system", "content": "You are a legal document comparison expert. Analyze the differences between two versions of a document."},
+                {"role": "user", "content": comparison_prompt}
             ],
             temperature=0.2
         )
         
-        return json.loads(response.choices[0].message.content)
-    except Exception as e:
-        logger.error(f"Clause analysis error: {str(e)}")
-        return {
-            "clauses": [],
-            "missing_clauses": [],
-            "unusual_provisions": []
+        # Parse AI analysis
+        ai_analysis = json.loads(response.choices[0].message.content)
+        
+        # Generate line-by-line diff
+        diff_analysis = {
+            "additions": [line[2:] for line in diff if line.startswith('+ ')],
+            "deletions": [line[2:] for line in diff if line.startswith('- ')],
+            "modifications": [line[2:] for line in diff if line.startswith('? ')]
         }
+        
+        return {
+            "ai_analysis": ai_analysis,
+            "diff_analysis": diff_analysis,
+            "comparison_date": datetime.now().isoformat(),
+            "diff_stats": {
+                "additions": len(diff_analysis["additions"]),
+                "deletions": len(diff_analysis["deletions"]),
+                "modifications": len(diff_analysis["modifications"])
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Comparison error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Comparison failed: {str(e)}")
 
 def detect_document_type(text: str) -> Dict:
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": """Analyze the document and determine its type. 
-                Return ONLY a JSON object in this format:
+                {"role": "system", "content": """You are a legal document classifier. 
+                Analyze the document and determine its type. Return ONLY a JSON object without any additional text or formatting.
+                Format:
                 {
-                    "type": "CONTRACT/EMPLOYMENT/REAL_ESTATE/LEGAL_BRIEF/CORPORATE/PATENT/REGULATORY/FINANCE",
+                    "type": "CONTRACT",
                     "confidence": 0.95,
                     "indicators": ["reason 1", "reason 2"],
                     "industry": "specific industry if applicable",
@@ -114,7 +147,20 @@ def detect_document_type(text: str) -> Dict:
             temperature=0.2
         )
         
-        return json.loads(response.choices[0].message.content)
+        # Get the response content and parse it
+        content = response.choices[0].message.content
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError:
+            logger.error(f"Failed to parse document type response: {content}")
+            return {
+                "type": "UNKNOWN",
+                "confidence": 0.5,
+                "indicators": ["Error parsing classification"],
+                "industry": "Unknown",
+                "jurisdiction": "Unknown"
+            }
+            
     except Exception as e:
         logger.error(f"Document type detection error: {str(e)}")
         return {
@@ -127,17 +173,13 @@ def detect_document_type(text: str) -> Dict:
 
 def analyze_document(text: str, doc_type: str) -> Dict:
     try:
-        # Get clause analysis first
-        clause_analysis = analyze_clauses(text)
-        
-        # Get general analysis
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": """Analyze this legal document and provide a detailed analysis. 
-                Return ONLY a JSON object in this format:
+                {"role": "system", "content": """Analyze this legal document and return ONLY a JSON object without any additional text or formatting.
+                Format:
                 {
-                    "summary": "comprehensive summary",
+                    "summary": "brief overview",
                     "key_terms": [
                         {"term": "term name", "value": "description", "category": "FINANCIAL/LEGAL/OPERATIONAL"}
                     ],
@@ -148,10 +190,7 @@ def analyze_document(text: str, doc_type: str) -> Dict:
                         {"description": "risk description", "severity": "HIGH/MEDIUM/LOW", "category": "LEGAL/FINANCIAL/OPERATIONAL"}
                     ],
                     "flags": [
-                        {"severity": "HIGH/MEDIUM/LOW", "issue": "description", "recommendation": "action"}
-                    ],
-                    "action_items": [
-                        {"description": "action item", "deadline": "deadline if any", "priority": "HIGH/MEDIUM/LOW"}
+                        {"severity": "HIGH", "issue": "description", "recommendation": "action"}
                     ]
                 }"""},
                 {"role": "user", "content": f"Analyze this document:\n\n{text}"}
@@ -159,14 +198,20 @@ def analyze_document(text: str, doc_type: str) -> Dict:
             temperature=0.2
         )
         
-        general_analysis = json.loads(response.choices[0].message.content)
-        
-        # Combine analyses
-        return {
-            **general_analysis,
-            "clause_analysis": clause_analysis
-        }
-        
+        # Get the response content and parse it
+        content = response.choices[0].message.content
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError:
+            logger.error(f"Failed to parse analysis response: {content}")
+            return {
+                "summary": "Error parsing analysis results",
+                "key_terms": [],
+                "dates": [],
+                "risks": ["Analysis parsing error"],
+                "flags": [{"severity": "HIGH", "issue": "Analysis Error", "recommendation": "Please try again"}]
+            }
+            
     except Exception as e:
         logger.error(f"Analysis error: {str(e)}")
         return {
@@ -174,13 +219,7 @@ def analyze_document(text: str, doc_type: str) -> Dict:
             "key_terms": [],
             "dates": [],
             "risks": ["Analysis error occurred"],
-            "flags": [{"severity": "HIGH", "issue": "Analysis Error", "recommendation": "Please try again"}],
-            "action_items": [],
-            "clause_analysis": {
-                "clauses": [],
-                "missing_clauses": [],
-                "unusual_provisions": []
-            }
+            "flags": [{"severity": "HIGH", "issue": "Analysis Error", "recommendation": "Please try again"}]
         }
 
 @app.post("/analyze")
@@ -217,6 +256,47 @@ async def analyze_contract(file: UploadFile = File(...)):
             content={"detail": f"Analysis failed: {str(e)}"}
         )
 
+@app.post("/compare")
+async def compare_documents_endpoint(
+    file1: UploadFile = File(...),
+    file2: UploadFile = File(...),
+):
+    """Compare two PDF documents and return analysis of differences."""
+    try:
+        # Extract text from both PDFs
+        contents1 = await file1.read()
+        contents2 = await file2.read()
+        
+        text1 = extract_text_from_pdf(contents1)
+        text2 = extract_text_from_pdf(contents2)
+        
+        if not text1.strip() or not text2.strip():
+            return JSONResponse(
+                status_code=400,
+                content={"detail": "Could not extract text from one or both PDFs"}
+            )
+        
+        # Get comparison results
+        comparison_results = compare_documents(text1, text2)
+        
+        # Get individual analyses for context
+        analysis1 = analyze_document(text1, "UNKNOWN")
+        analysis2 = analyze_document(text2, "UNKNOWN")
+        
+        # Combine all results
+        return JSONResponse(content={
+            "comparison": comparison_results,
+            "document1_analysis": analysis1,
+            "document2_analysis": analysis2
+        })
+        
+    except Exception as e:
+        logger.error(f"Comparison endpoint error: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Comparison failed: {str(e)}"}
+        )
+
 @app.post("/ask")
 async def ask_question(
     file: UploadFile = File(...),
@@ -231,7 +311,7 @@ async def ask_question(
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a legal document assistant. Answer questions about the document accurately and concisely. If referring to specific clauses, cite them."},
+                {"role": "system", "content": "You are a legal document assistant. Answer questions about the document accurately and concisely. If referring to specific sections, cite them."},
                 {"role": "user", "content": f"Document text: {text}\n\nQuestion: {question}"}
             ],
             temperature=0.3
@@ -251,4 +331,4 @@ async def ask_question(
 
 @app.get("/")
 async def root():
-    return {"message": "Enhanced Legal Document Analyzer API is running"}
+    return {"message": "Legal Document Analyzer API is running"}
