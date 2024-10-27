@@ -32,15 +32,6 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def clean_json_string(s: str) -> str:
     """Clean and extract JSON from a string that might contain markdown or other text."""
-    json_match = re.search(r'
-json\s*(.*?)\s*
-', s, re.DOTALL)
-    if json_match:
-        s = json_match.group(1)
-    else:
-        json_match = re.search(r'(.*?)', s, re.DOTALL)
-        if json_match:
-            s = json_match.group(1)
     return s.strip()
 
 def parse_json_response(response_text: str) -> Dict:
