@@ -329,35 +329,35 @@
             });
         });
 
-        // File Upload Handling for Analysis
-        fileInput.addEventListener('change', function(e) {
-            handleFile(e.target.files[0]);
-        });
+        // DOM Elements
+const fileInput = document.getElementById('fileInput');
+const dropZone = document.getElementById('dropZone');
+const analyzeBtn = document.getElementById('analyzeBtn');
+// ... other DOM elements ...
 
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('border-blue-500');
-        });
+// File Upload Handling for Analysis
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        console.log('File selected:', file.name); // Debug log
+        if (file.type === 'application/pdf') {
+            currentFile = file;
+            analyzeBtn.disabled = false;
+            dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
+        } else {
+            alert('Please upload a PDF file');
+            fileInput.value = ''; // Reset the input
+            currentFile = null;
+            analyzeBtn.disabled = true;
+            dropZone.querySelector('p').textContent = 'Drop your PDF document here or click to upload';
+        }
+    }
+});
 
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('border-blue-500');
-        });
+// ... rest of the new code I provided ...
 
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-blue-500');
-            const file = e.dataTransfer.files[0];
-            handleFile(file);
-        });
-
-        function handleFile(file) {
-            if (file && file.type === 'application/pdf') {
-                currentFile = file;
-                analyzeBtn.disabled = false;
-                dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
-            } else {
-                alert('Please upload a PDF file');
-            }
+// Main Navigation Handling
+document.querySelectorAll('.main-nav-button').forEach(button => {
         }
 
         // File Upload Handling for Comparison
