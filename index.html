@@ -283,6 +283,25 @@
             console.log(`[Debug] ${message}`, data || '');
         }
 
+        // Helper Functions
+        function showLoading(show, text = 'Processing...') {
+            loadingState.classList.toggle('hidden', !show);
+            loadingText.textContent = text;
+        }
+
+        // Function to map categories to colors
+        function getCategoryColor(category) {
+            const colors = {
+                'FINANCIAL': 'bg-green-100 text-green-800',
+                'LEGAL': 'bg-blue-100 text-blue-800',
+                'OPERATIONAL': 'bg-yellow-100 text-yellow-800',
+                'HIGH': 'bg-red-100 text-red-800',
+                'MEDIUM': 'bg-yellow-100 text-yellow-800',
+                'LOW': 'bg-blue-100 text-blue-800'
+            };
+            return colors[category] || 'bg-gray-100 text-gray-800';
+        }
+
         // File Upload Handling for Analysis
         fileInput.addEventListener('change', (e) => {
             logDebug('File input change event triggered');
@@ -372,24 +391,6 @@
                 showLoading(false);
             }
         });
-
-        // Helper Functions
-        function showLoading(show, text = 'Processing...') {
-            loadingState.classList.toggle('hidden', !show);
-            loadingText.textContent = text;
-        }
-
-        function getCategoryColor(category) {
-            const colors = {
-                'FINANCIAL': 'bg-green-100 text-green-800',
-                'LEGAL': 'bg-blue-100 text-blue-800',
-                'OPERATIONAL': 'bg-yellow-100 text-yellow-800',
-                'HIGH': 'bg-red-100 text-red-800',
-                'MEDIUM': 'bg-yellow-100 text-yellow-800',
-                'LOW': 'bg-blue-100 text-blue-800'
-            };
-            return colors[category] || 'bg-gray-100 text-gray-800';
-        }
 
         function displayResults(data) {
             logDebug('Displaying analysis results');
@@ -511,88 +512,6 @@
             document.getElementById('flagsContent').innerHTML = flagsHtml;
 
             resultsSection.classList.remove('hidden');
-        }
-
-        function displayComparisonResults(data) {
-            const comparison = data.comparison;
-            const ai_analysis = comparison.ai_analysis;
-
-            // Display summary
-            document.getElementById('changesSummaryContent').innerHTML = `
-                <p class="text-gray-700">${ai_analysis.summary_of_changes}</p>
-            `;
-
-            // Update counters
-            document.getElementById('additionsCount').textContent = comparison.diff_stats.additions;
-            document.getElementById('deletionsCount').textContent = comparison.diff_stats.deletions;
-            document.getElementById('modificationsCount').textContent = comparison.diff_stats.modifications;
-
-            // Display significant changes
-            const significantChangesHtml = ai_analysis.significant_changes.map(change => `
-                <div class="bg-white shadow rounded-lg p-4">
-                    <div class="flex justify-between items-start">
-                        <div class="font-medium">${change.section}</div>
-                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(change.impact)}">
-                            ${change.impact}
-                        </span>
-                    </div>
-                    <div class="text-gray-600 mt-1">${change.change}</div>
-                </div>
-            `).join('');
-            document.getElementById('significantChangesContent').innerHTML = significantChangesHtml;
-
-            // Display clause changes
-            document.getElementById('addedClausesContent').innerHTML = ai_analysis.added_clauses.map(clause => `
-                <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-                    ${clause}
-                </div>
-            `).join('');
-
-            document.getElementById('removedClausesContent').innerHTML = ai_analysis.removed_clauses.map(clause => `
-                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                    ${clause}
-                </div>
-            `).join('');
-
-            document.getElementById('modifiedClausesContent').innerHTML = ai_analysis.modified_clauses.map(clause => `
-                <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg">
-                    <div class="font-medium">${clause.clause}</div>
-                    <div class="mt-2 space-y-1">
-                        <div class="text-sm">Original: ${clause.original}</div>
-                        <div class="text-sm">New: ${clause.new}</div>
-                    </div>
-                    <div class="mt-2 text-sm font-medium">Impact: ${clause.impact}</div>
-                </div>
-            `).join('');
-
-            // Display risk analysis
-            const risksHtml = ai_analysis.risk_analysis.map(risk => `
-                <div class="bg-white shadow rounded-lg p-4">
-                    <div class="flex justify-between items-start">
-                        <div class="font-medium">${risk.risk}</div>
-                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(risk.severity)}">
-                            ${risk.severity}
-                        </span>
-                    </div>
-                    <div class="text-gray-600 mt-2">${risk.recommendation}</div>
-                </div>
-            `).join('');
-            document.getElementById('comparisonRisksContent').innerHTML = risksHtml;
-        }
-
-        function addToQAHistory(question, answer) {
-            const qaElement = document.createElement('div');
-            qaElement.className = 'border rounded-lg p-4';
-            qaElement.innerHTML = `
-                <div class="font-medium">Q: ${question}</div>
-                <div class="text-gray-600 mt-2 answer">A: ${answer}</div>
-            `;
-            qaHistory.insertBefore(qaElement, qaHistory.firstChild);
-            return qaElement;
-        }
-
-        function updateQAResponse(element, answer) {
-            element.querySelector('.answer').textContent = `A: ${answer}`;
         }
     </script>
 </body>
