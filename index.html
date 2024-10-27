@@ -252,63 +252,6 @@
             });
         });
 
-        // Q&A Submission Handling
-        const questionForm = document.getElementById('questionForm');
-        const questionInput = document.getElementById('questionInput');
-        const qaHistory = document.getElementById('qaHistory');
-
-        questionForm.addEventListener('submit', async (e) => {
-            e.preventDefault();  // Prevent form from refreshing the page
-            const question = questionInput.value.trim();
-            if (!question || !currentFile) return;
-
-            const formData = new FormData();
-            formData.append('file', currentFile);
-            formData.append('question', question);
-
-            try {
-                logDebug('Submitting question:', question);
-                const questionElement = addToQAHistory(question, 'Analyzing...');
-                showLoading(true, 'Getting answer...');
-
-                const response = await fetch(`${BACKEND_URL}/ask`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-                logDebug('Answer received:', data);
-                
-                if (!response.ok) {
-                    throw new Error(data.detail || 'Failed to get answer');
-                }
-
-                updateQAResponse(questionElement, data.answer);
-                questionInput.value = '';  // Clear input field
-            } catch (error) {
-                console.error('Q&A error:', error);
-                alert('Error getting answer: ' + error.message);
-            } finally {
-                showLoading(false);
-            }
-        });
-
-        // Helper Functions for Q&A History
-        function addToQAHistory(question, answer) {
-            const qaElement = document.createElement('div');
-            qaElement.className = 'border rounded-lg p-4';
-            qaElement.innerHTML = `
-                <div class="font-medium">Q: ${question}</div>
-                <div class="text-gray-600 mt-2 answer">A: ${answer}</div>
-            `;
-            qaHistory.insertBefore(qaElement, qaHistory.firstChild);
-            return qaElement;
-        }
-
-        function updateQAResponse(element, answer) {
-            element.querySelector('.answer').textContent = `A: ${answer}`;
-        }
-
         // Document Analysis
         analyzeBtn.addEventListener('click', async () => {
             if (!currentFile) return;
@@ -327,7 +270,7 @@
                 });
 
                 const data = await response.json();
-                logDebug('Analysis data received:', data);  // Debug log to check the received data
+                logDebug('Full analysis response:', data);  // Debug log to check the received data
 
                 if (!response.ok) {
                     throw new Error(data.detail || JSON.stringify(data) || 'Analysis failed');
@@ -422,8 +365,8 @@
                         <span class="text-xs px-2 py-1 rounded ${getCategoryColor(date.importance)}">
                             ${date.importance}
                         </span>
-                        <div class="text-gray-600 mt-1">${date.date}</div>
                     </div>
+                    <div class="text-gray-600 mt-1">${date.date}</div>
                 </div>
             `).join('') || '';
 
@@ -435,49 +378,74 @@
                 </div>
             `).join('') || '<p>No key clauses found.</p>';
 
-            // Display missing clauses
             document.getElementById('missingClausesContent').innerHTML = analysis.clause_analysis?.missing_clauses?.map(missing => `
                 <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg">
                     ${missing}
                 </div>
             `).join('') || '<p>No missing clauses identified.</p>';
 
-            // Display unusual provisions
             document.getElementById('unusualProvisionsContent').innerHTML = analysis.clause_analysis?.unusual_provisions?.map(unusual => `
                 <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                     ${unusual}
                 </div>
             `).join('') || '<p>No unusual provisions identified.</p>';
+        }
 
-            // Display risks
-            document.getElementById('risksContent').innerHTML = analysis.risks?.map(risk => `
-                <div class="bg-white shadow rounded-lg p-4">
-                    <div class="flex justify-between items-start">
-                        <div class="font-medium">${typeof risk === 'object' ? risk.description : risk}</div>
-                        ${typeof risk === 'object' && risk.severity ? `
-                            <span class="text-xs px-2 py-1 rounded ${getCategoryColor(risk.severity)}">
-                                ${risk.severity}
-                            </span>
-                        ` : ''}
-                    </div>
-                    ${typeof risk === 'object' && risk.category ? `
-                        <div class="text-sm text-gray-600 mt-1">Category: ${risk.category}</div>
-                    ` : ''}
-                </div>
-            `).join('') || '';
+        // Q&A Submission Handling
+        const questionForm = document.getElementById('questionForm');
+        const questionInput = document.getElementById('questionInput');
+        const qaHistory = document.getElementById('qaHistory');
 
-            // Display flags
-            document.getElementById('flagsContent').innerHTML = analysis.flags?.map(flag => `
-                <div class="bg-white shadow rounded-lg p-4">
-                    <div class="flex justify-between items-start">
-                        <div class="font-medium">${flag.issue}</div>
-                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(flag.severity)}">
-                            ${flag.severity}
-                        </span>
-                    </div>
-                    <div class="text-gray-600 mt-1">${flag.recommendation}</div>
-                </div>
-            `).join('') || '';
+        questionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const question = questionInput.value.trim();
+            if (!question || !currentFile) return;
+
+            const formData = new FormData();
+            formData.append('file', currentFile);
+            formData.append('question', question);
+
+            try {
+                logDebug('Submitting question:', question);
+                const questionElement = addToQAHistory(question, 'Analyzing...');
+                showLoading(true, 'Getting answer...');
+
+                const response = await fetch(`${BACKEND_URL}/ask`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                logDebug('Answer received:', data);
+                
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to get answer');
+                }
+
+                updateQAResponse(questionElement, data.answer);
+                questionInput.value = '';
+            } catch (error) {
+                console.error('Q&A error:', error);
+                alert('Error getting answer: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // Helper Functions for Q&A
+        function addToQAHistory(question, answer) {
+            const qaElement = document.createElement('div');
+            qaElement.className = 'border rounded-lg p-4';
+            qaElement.innerHTML = `
+                <div class="font-medium">Q: ${question}</div>
+                <div class="text-gray-600 mt-2 answer">A: ${answer}</div>
+            `;
+            qaHistory.insertBefore(qaElement, qaHistory.firstChild);
+            return qaElement;
+        }
+
+        function updateQAResponse(element, answer) {
+            element.querySelector('.answer').textContent = `A: ${answer}`;
         }
     </script>
 </body>
