@@ -166,35 +166,54 @@
         });
 
         // File Upload Handling
-        fileInput.addEventListener('change', function(e) {
-            handleFile(e.target.files[0]);
-        });
+fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    console.log('File selected:', file); // Debug log
+    if (file && file.type === 'application/pdf') {
+        currentFile = file;
+        analyzeBtn.disabled = false;
+        dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
+        console.log('File accepted:', file.name); // Debug log
+    } else {
+        alert('Please upload a PDF file');
+        fileInput.value = ''; // Reset the input
+        currentFile = null;
+        analyzeBtn.disabled = true;
+        dropZone.querySelector('p').textContent = 'Drop your PDF document here or click to upload';
+    }
+});
 
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('border-blue-500');
-        });
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZone.classList.add('border-blue-500');
+});
 
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('border-blue-500');
-        });
+dropZone.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZone.classList.remove('border-blue-500');
+});
 
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-blue-500');
-            const file = e.dataTransfer.files[0];
-            handleFile(file);
-        });
-
-        function handleFile(file) {
-            if (file && file.type === 'application/pdf') {
-                currentFile = file;
-                analyzeBtn.disabled = false;
-                dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
-            } else {
-                alert('Please upload a PDF file');
-            }
-        }
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZone.classList.remove('border-blue-500');
+    
+    const file = e.dataTransfer.files[0];
+    console.log('File dropped:', file); // Debug log
+    if (file && file.type === 'application/pdf') {
+        currentFile = file;
+        analyzeBtn.disabled = false;
+        dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
+        console.log('File accepted:', file.name); // Debug log
+    } else {
+        alert('Please upload a PDF file');
+        currentFile = null;
+        analyzeBtn.disabled = true;
+        dropZone.querySelector('p').textContent = 'Drop your PDF document here or click to upload';
+    }
+});
 
         // Document Analysis
         analyzeBtn.addEventListener('click', async () => {
