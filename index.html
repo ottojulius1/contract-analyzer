@@ -279,7 +279,7 @@
 
         // Debug logging function
         function logDebug(message, data = null) {
-            console.log(`[Debug] ${message}`, data || '');
+            console.log([Debug] ${message}, data || '');
         }
 
         // File Upload Handling for Analysis
@@ -291,7 +291,7 @@
                 if (file.type === 'application/pdf') {
                     currentFile = file;
                     analyzeBtn.disabled = false;
-                    dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
+                    dropZone.querySelector('p').textContent = Selected: ${file.name};
                     logDebug('PDF file accepted');
                 } else {
                     alert('Please upload a PDF file');
@@ -328,7 +328,7 @@
                 if (file.type === 'application/pdf') {
                     currentFile = file;
                     analyzeBtn.disabled = false;
-                    dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
+                    dropZone.querySelector('p').textContent = Selected: ${file.name};
                     logDebug('PDF file accepted');
                 } else {
                     alert('Please upload a PDF file');
@@ -368,7 +368,7 @@
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
                 
                 button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
-                document.getElementById(`${button.dataset.tab}-tab`).classList.remove('hidden');
+                document.getElementById(${button.dataset.tab}-tab).classList.remove('hidden');
             });
         });
 
@@ -382,16 +382,16 @@
                 document.querySelectorAll('.comparison-content').forEach(c => c.classList.add('hidden'));
                 
                 button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
-                document.getElementById(`${button.dataset.tab}-tab`).classList.remove('hidden');
+                document.getElementById(${button.dataset.tab}-tab).classList.remove('hidden');
             });
         });
         // File Upload Handling for Comparison
         ['1', '2'].forEach(num => {
-            const input = document.getElementById(`fileInput${num}`);
-            const zone = document.getElementById(`dropZone${num}`);
+            const input = document.getElementById(fileInput${num});
+            const zone = document.getElementById(dropZone${num});
             
             input.addEventListener('change', (e) => {
-                logDebug(`Comparison file ${num} input change event triggered`);
+                logDebug(Comparison file ${num} input change event triggered);
                 if (e.target.files.length > 0) {
                     const file = e.target.files[0];
                     handleComparisonFile(file, num);
@@ -415,7 +415,7 @@
                 e.stopPropagation();
                 zone.classList.remove('border-blue-500');
                 
-                logDebug(`Comparison file ${num} drop event triggered`);
+                logDebug(Comparison file ${num} drop event triggered);
                 if (e.dataTransfer.files.length > 0) {
                     const file = e.dataTransfer.files[0];
                     handleComparisonFile(file, num);
@@ -424,14 +424,14 @@
         });
 
         function handleComparisonFile(file, num) {
-            logDebug(`Handling comparison file ${num}:`, file.name);
+            logDebug(Handling comparison file ${num}:, file.name);
             if (file.type === 'application/pdf') {
                 if (num === '1') {
                     comparisonFiles.original = file;
                 } else {
                     comparisonFiles.new = file;
                 }
-                document.getElementById(`dropZone${num}`).querySelector('p').textContent = `Selected: ${file.name}`;
+                document.getElementById(dropZone${num}).querySelector('p').textContent = Selected: ${file.name};
                 compareBtn.disabled = !(comparisonFiles.original && comparisonFiles.new);
                 logDebug('Comparison PDF file accepted');
             } else {
@@ -441,7 +441,7 @@
                 } else {
                     comparisonFiles.new = null;
                 }
-                document.getElementById(`dropZone${num}`).querySelector('p').textContent = 
+                document.getElementById(dropZone${num}).querySelector('p').textContent = 
                     num === '1' ? 'Drop original PDF here or click to upload' : 'Drop new PDF here or click to upload';
                 compareBtn.disabled = true;
                 logDebug('Comparison file rejected - not a PDF');
@@ -460,7 +460,7 @@
                 showLoading(true, 'Analyzing document...');
                 resultsSection.classList.add('hidden');
                 
-                const response = await fetch(`${BACKEND_URL}/analyze`, {
+                const response = await fetch(${BACKEND_URL}/analyze, {
                     method: 'POST',
                     body: formData
                 });
@@ -495,7 +495,7 @@
                 showLoading(true, 'Comparing documents...');
                 comparisonResults.classList.add('hidden');
                 
-                const response = await fetch(`${BACKEND_URL}/compare`, {
+                const response = await fetch(${BACKEND_URL}/compare, {
                     method: 'POST',
                     body: formData
                 });
@@ -532,7 +532,7 @@
                 const questionElement = addToQAHistory(question, 'Analyzing...');
                 showLoading(true, 'Getting answer...');
 
-                const response = await fetch(`${BACKEND_URL}/ask`, {
+                const response = await fetch(${BACKEND_URL}/ask, {
                     method: 'POST',
                     body: formData
                 });
@@ -571,8 +571,7 @@
             return colors[category] || 'bg-gray-100 text-gray-800';
         }
 
-        function displayResults(data) {
-            logDebug('Displaying analysis results');
+function displayResults(data) {
             const docType = data.document_type;
             const docTypeHtml = `
                 <div class="space-y-2">
@@ -627,11 +626,54 @@
             `;
             document.getElementById('quickStatsContent').innerHTML = quickStatsHtml;
 
+            // Display clause analysis
+            const clauseAnalysis = data.analysis.clause_analysis || {};
+            
+            // Display key clauses
+            const keyClausesHtml = clauseAnalysis.key_clauses?.map(clause => `
+                <div class="bg-white shadow rounded-lg p-4 mb-4">
+                    <div class="flex justify-between items-start">
+                        <div class="font-medium">${clause.title || ''}</div>
+                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(clause.importance || 'LOW')}">
+                            ${clause.importance || 'LOW'}
+                        </span>
+                    </div>
+                    <div class="text-gray-600 mt-2">${clause.content || ''}</div>
+                </div>
+            `).join('') || '<div class="text-gray-500 p-4">No key clauses identified</div>';
+            document.getElementById('clausesContent').innerHTML = keyClausesHtml;
+
+            // Display missing clauses
+            const missingClausesHtml = clauseAnalysis.missing_clauses?.map(clause => `
+                <div class="bg-yellow-50 rounded-lg p-4 mb-2">
+                    <div class="font-medium text-yellow-800">${clause.clause || ''}</div>
+                    <div class="text-yellow-700 mt-1">${clause.recommendation || ''}</div>
+                </div>
+            `).join('') || '<div class="text-gray-500">No missing clauses identified</div>';
+            document.getElementById('missingClausesContent').innerHTML = missingClausesHtml;
+
+            // Display unusual provisions
+            const unusualProvisionsHtml = clauseAnalysis.unusual_provisions?.map(provision => `
+                <div class="bg-red-50 rounded-lg p-4 mb-2">
+                    <div class="flex justify-between items-start">
+                        <div class="font-medium text-red-800">${provision.provision || ''}</div>
+                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(provision.risk_level || 'LOW')}">
+                            ${provision.risk_level || 'LOW'}
+                        </span>
+                    </div>
+                    <div class="text-red-700 mt-1">${provision.explanation || ''}</div>
+                </div>
+            `).join('') || '<div class="text-gray-500">No unusual provisions identified</div>';
+            document.getElementById('unusualProvisionsContent').innerHTML = unusualProvisionsHtml;
+
+            resultsSection.classList.remove('hidden');
+        }
+
             // Display summary
             document.getElementById('summaryContent').textContent = analysis.summary;
             
             // Display key terms
-            const keyTermsHtml = analysis.key_terms?.map(term => `
+            const keyTermsHtml = analysis.key_terms?.map(term => 
                 <div class="bg-white shadow rounded-lg p-4">
                     <div class="flex justify-between items-start">
                         <div class="font-medium">${term.term}</div>
@@ -641,11 +683,11 @@
                     </div>
                     <div class="text-gray-600 mt-1">${term.value}</div>
                 </div>
-            `).join('') || '';
+            ).join('') || '';
             document.getElementById('keyTermsContent').innerHTML = keyTermsHtml;
 
             // Display dates
-            const datesHtml = analysis.dates?.map(date => `
+            const datesHtml = analysis.dates?.map(date => 
                 <div class="bg-white shadow rounded-lg p-4">
                     <div class="flex justify-between items-start">
                         <div class="font-medium">${date.event}</div>
@@ -655,29 +697,29 @@
                     </div>
                     <div class="text-gray-600 mt-1">${date.date}</div>
                 </div>
-            `).join('') || '';
+            ).join('') || '';
             document.getElementById('datesContent').innerHTML = datesHtml;
 
             // Display risks
-            const risksHtml = analysis.risks?.map(risk => `
+            const risksHtml = analysis.risks?.map(risk => 
                 <div class="bg-white shadow rounded-lg p-4">
                     <div class="flex justify-between items-start">
                         <div class="font-medium">${typeof risk === 'object' ? risk.description : risk}</div>
-                        ${typeof risk === 'object' && risk.severity ? `
+                        ${typeof risk === 'object' && risk.severity ? 
                             <span class="text-xs px-2 py-1 rounded ${getCategoryColor(risk.severity)}">
                                 ${risk.severity}
                             </span>
-                        ` : ''}
+                         : ''}
                     </div>
-                    ${typeof risk === 'object' && risk.category ? `
+                    ${typeof risk === 'object' && risk.category ? 
                         <div class="text-sm text-gray-600 mt-1">Category: ${risk.category}</div>
-                    ` : ''}
+                     : ''}
                 </div>
-            `).join('') || '';
+            ).join('') || '';
             document.getElementById('risksContent').innerHTML = risksHtml;
 
             // Display flags
-            const flagsHtml = analysis.flags?.map(flag => `
+            const flagsHtml = analysis.flags?.map(flag => 
                 <div class="bg-white shadow rounded-lg p-4">
                     <div class="flex justify-between items-start">
                         <div class="font-medium">${flag.issue}</div>
@@ -687,7 +729,7 @@
                     </div>
                     <div class="text-gray-600 mt-1">${flag.recommendation}</div>
                 </div>
-            `).join('') || '';
+            ).join('') || '';
             document.getElementById('flagsContent').innerHTML = flagsHtml;
 
             resultsSection.classList.remove('hidden');
@@ -698,9 +740,9 @@
             const ai_analysis = comparison.ai_analysis;
 
             // Display summary
-            document.getElementById('changesSummaryContent').innerHTML = `
+            document.getElementById('changesSummaryContent').innerHTML = 
                 <p class="text-gray-700">${ai_analysis.summary_of_changes}</p>
-            `;
+            ;
 
             // Update counters
             document.getElementById('additionsCount').textContent = comparison.diff_stats.additions;
@@ -708,7 +750,7 @@
             document.getElementById('modificationsCount').textContent = comparison.diff_stats.modifications;
 
             // Display significant changes
-            const significantChangesHtml = ai_analysis.significant_changes.map(change => `
+            const significantChangesHtml = ai_analysis.significant_changes.map(change => 
                 <div class="bg-white shadow rounded-lg p-4">
                     <div class="flex justify-between items-start">
                         <div class="font-medium">${change.section}</div>
@@ -718,23 +760,23 @@
                     </div>
                     <div class="text-gray-600 mt-1">${change.change}</div>
                 </div>
-            `).join('');
+            ).join('');
             document.getElementById('significantChangesContent').innerHTML = significantChangesHtml;
 
             // Display clause changes
-            document.getElementById('addedClausesContent').innerHTML = ai_analysis.added_clauses.map(clause => `
+            document.getElementById('addedClausesContent').innerHTML = ai_analysis.added_clauses.map(clause => 
                 <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
                     ${clause}
                 </div>
-            `).join('');
+            ).join('');
 
-            document.getElementById('removedClausesContent').innerHTML = ai_analysis.removed_clauses.map(clause => `
+            document.getElementById('removedClausesContent').innerHTML = ai_analysis.removed_clauses.map(clause => 
                 <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                     ${clause}
                 </div>
-            `).join('');
+            ).join('');
 
-            document.getElementById('modifiedClausesContent').innerHTML = ai_analysis.modified_clauses.map(clause => `
+            document.getElementById('modifiedClausesContent').innerHTML = ai_analysis.modified_clauses.map(clause => 
                 <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg">
                     <div class="font-medium">${clause.clause}</div>
                     <div class="mt-2 space-y-1">
@@ -743,10 +785,10 @@
                     </div>
                     <div class="mt-2 text-sm font-medium">Impact: ${clause.impact}</div>
                 </div>
-            `).join('');
+            ).join('');
 
             // Display risk analysis
-            const risksHtml = ai_analysis.risk_analysis.map(risk => `
+            const risksHtml = ai_analysis.risk_analysis.map(risk => 
                 <div class="bg-white shadow rounded-lg p-4">
                     <div class="flex justify-between items-start">
                         <div class="font-medium">${risk.risk}</div>
@@ -756,23 +798,23 @@
                     </div>
                     <div class="text-gray-600 mt-2">${risk.recommendation}</div>
                 </div>
-            `).join('');
+            ).join('');
             document.getElementById('comparisonRisksContent').innerHTML = risksHtml;
         }
 
         function addToQAHistory(question, answer) {
             const qaElement = document.createElement('div');
             qaElement.className = 'border rounded-lg p-4';
-            qaElement.innerHTML = `
+            qaElement.innerHTML = 
                 <div class="font-medium">Q: ${question}</div>
                 <div class="text-gray-600 mt-2 answer">A: ${answer}</div>
-            `;
+            ;
             qaHistory.insertBefore(qaElement, qaHistory.firstChild);
             return qaElement;
         }
 
         function updateQAResponse(element, answer) {
-            element.querySelector('.answer').textContent = `A: ${answer}`;
+            element.querySelector('.answer').textContent = A: ${answer};
         }
     </script>
 </body>
