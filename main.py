@@ -32,11 +32,13 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def clean_json_string(s: str) -> str:
     """Clean and extract JSON from a string that might contain markdown or other text."""
-    json_match = re.search(r'```json\s*(.*?)\s*```', s, re.DOTALL)
+    json_match = re.search(r'
+json\s*(.*?)\s*
+', s, re.DOTALL)
     if json_match:
         s = json_match.group(1)
     else:
-        json_match = re.search(r'`(.*?)`', s, re.DOTALL)
+        json_match = re.search(r'(.*?)', s, re.DOTALL)
         if json_match:
             s = json_match.group(1)
     return s.strip()
@@ -191,18 +193,7 @@ def analyze_document(text: str, doc_type: str) -> Dict:
                     ],
                     "flags": [
                         {"severity": "HIGH", "issue": "description", "recommendation": "action"}
-                    ],
-                    "clause_analysis": {
-                        "key_clauses": [
-                            {"title": "clause title", "content": "clause content", "importance": "HIGH/MEDIUM/LOW"}
-                        ],
-                        "missing_clauses": [
-                            {"clause": "missing clause name", "recommendation": "why it should be included"}
-                        ],
-                        "unusual_provisions": [
-                            {"provision": "unusual provision", "explanation": "why it's unusual", "risk_level": "HIGH/MEDIUM/LOW"}
-                        ]
-                    }
+                    ]
                 }"""},
                 {"role": "user", "content": f"Analyze this document:\n\n{text}"}
             ],
