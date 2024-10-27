@@ -194,17 +194,17 @@ def analyze_document(text: str, doc_type: str) -> Dict:
                     ],
                     "clause_analysis": {
                         "key_clauses": [
-                            {"title": "clause title", "content": "clause content", "importance": "HIGH/MEDIUM/LOW"}
+                            {"title": "clause name", "content": "clause content", "importance": "HIGH/MEDIUM/LOW"}
                         ],
                         "missing_clauses": [
                             {"clause": "missing clause name", "recommendation": "why it should be included"}
                         ],
                         "unusual_provisions": [
-                            {"provision": "unusual provision", "explanation": "why it's unusual", "risk_level": "HIGH/MEDIUM/LOW"}
+                            {"provision": "provision description", "explanation": "why it's unusual", "risk_level": "HIGH/MEDIUM/LOW"}
                         ]
                     }
                 }"""},
-                {"role": "user", "content": f"Analyze this document:\n\n{text}"}
+                {"role": "user", "content": f"Analyze this document and identify key clauses, missing standard clauses, and any unusual provisions:\n\n{text}"}
             ],
             temperature=0.2
         )
@@ -220,7 +220,12 @@ def analyze_document(text: str, doc_type: str) -> Dict:
                 "key_terms": [],
                 "dates": [],
                 "risks": ["Analysis parsing error"],
-                "flags": [{"severity": "HIGH", "issue": "Analysis Error", "recommendation": "Please try again"}]
+                "flags": [{"severity": "HIGH", "issue": "Analysis Error", "recommendation": "Please try again"}],
+                "clause_analysis": {
+                    "key_clauses": [],
+                    "missing_clauses": [],
+                    "unusual_provisions": []
+                }
             }
             
     except Exception as e:
@@ -230,7 +235,12 @@ def analyze_document(text: str, doc_type: str) -> Dict:
             "key_terms": [],
             "dates": [],
             "risks": ["Analysis error occurred"],
-            "flags": [{"severity": "HIGH", "issue": "Analysis Error", "recommendation": "Please try again"}]
+            "flags": [{"severity": "HIGH", "issue": "Analysis Error", "recommendation": "Please try again"}],
+            "clause_analysis": {
+                "key_clauses": [],
+                "missing_clauses": [],
+                "unusual_provisions": []
+            }
         }
 
 @app.post("/analyze")
