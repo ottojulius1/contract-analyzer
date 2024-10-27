@@ -256,19 +256,14 @@
         </div>
     </div>
 
-    <!-- Full JavaScript -->
+    <!-- JavaScript -->
     <script>
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
         const analyzeBtn = document.getElementById('analyzeBtn');
-        const compareBtn = document.getElementById('compareBtn');
         const loadingState = document.getElementById('loadingState');
         const loadingText = document.getElementById('loadingText');
         const resultsSection = document.getElementById('resultsSection');
-        const comparisonResults = document.getElementById('comparisonResults');
-        const questionForm = document.getElementById('questionForm');
-        const questionInput = document.getElementById('questionInput');
-        const qaHistory = document.getElementById('qaHistory');
 
         // Debug logging function
         function logDebug(message, data = null) {
@@ -396,9 +391,11 @@
 
         // Function to display analysis results
         function displayResults(data) {
-            logDebug('Displaying analysis results');
             const docType = data.document_type;
-            const docTypeHtml = `
+            const analysis = data.analysis;
+
+            // Display document type
+            document.getElementById('documentTypeContent').innerHTML = `
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
                         <span class="font-medium">Type:</span>
@@ -424,12 +421,9 @@
                     </div>
                 </div>
             `;
-            document.getElementById('documentTypeContent').innerHTML = docTypeHtml;
-
-            const analysis = data.analysis;
 
             // Display quick stats
-            const quickStatsHtml = `
+            document.getElementById('quickStatsContent').innerHTML = `
                 <div class="grid grid-cols-2 gap-4">
                     <div class="p-3 bg-white rounded-lg shadow">
                         <div class="text-sm text-gray-600">Key Terms</div>
@@ -449,13 +443,12 @@
                     </div>
                 </div>
             `;
-            document.getElementById('quickStatsContent').innerHTML = quickStatsHtml;
 
             // Display summary
             document.getElementById('summaryContent').textContent = analysis.summary;
 
             // Display key terms
-            const keyTermsHtml = analysis.key_terms?.map(term => `
+            document.getElementById('keyTermsContent').innerHTML = analysis.key_terms?.map(term => `
                 <div class="bg-white shadow rounded-lg p-4">
                     <div class="flex justify-between items-start">
                         <div class="font-medium">${term.term}</div>
@@ -466,10 +459,9 @@
                     <div class="text-gray-600 mt-1">${term.value}</div>
                 </div>
             `).join('') || '';
-            document.getElementById('keyTermsContent').innerHTML = keyTermsHtml;
 
             // Display dates
-            const datesHtml = analysis.dates?.map(date => `
+            document.getElementById('datesContent').innerHTML = analysis.dates?.map(date => `
                 <div class="bg-white shadow rounded-lg p-4">
                     <div class="flex justify-between items-start">
                         <div class="font-medium">${date.event}</div>
@@ -480,10 +472,9 @@
                     <div class="text-gray-600 mt-1">${date.date}</div>
                 </div>
             `).join('') || '';
-            document.getElementById('datesContent').innerHTML = datesHtml;
 
             // Display risks
-            const risksHtml = analysis.risks?.map(risk => `
+            document.getElementById('risksContent').innerHTML = analysis.risks?.map(risk => `
                 <div class="bg-white shadow rounded-lg p-4">
                     <div class="flex justify-between items-start">
                         <div class="font-medium">${typeof risk === 'object' ? risk.description : risk}</div>
@@ -498,10 +489,9 @@
                     ` : ''}
                 </div>
             `).join('') || '';
-            document.getElementById('risksContent').innerHTML = risksHtml;
 
             // Display flags
-            const flagsHtml = analysis.flags?.map(flag => `
+            document.getElementById('flagsContent').innerHTML = analysis.flags?.map(flag => `
                 <div class="bg-white shadow rounded-lg p-4">
                     <div class="flex justify-between items-start">
                         <div class="font-medium">${flag.issue}</div>
@@ -512,9 +502,6 @@
                     <div class="text-gray-600 mt-1">${flag.recommendation}</div>
                 </div>
             `).join('') || '';
-            document.getElementById('flagsContent').innerHTML = flagsHtml;
-
-            resultsSection.classList.remove('hidden');
         }
     </script>
 </body>
