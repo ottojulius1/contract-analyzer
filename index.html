@@ -256,16 +256,8 @@
         </div>
     </div>
 
+    <!-- Full JavaScript -->
     <script>
-        // Constants and State
-        const BACKEND_URL = 'https://contract-analyzer-backend.onrender.com';
-        let currentFile = null;
-        let comparisonFiles = {
-            original: null,
-            new: null
-        };
-
-        // DOM Elements
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
         const analyzeBtn = document.getElementById('analyzeBtn');
@@ -283,13 +275,11 @@
             console.log(`[Debug] ${message}`, data || '');
         }
 
-        // Helper Functions
         function showLoading(show, text = 'Processing...') {
             loadingState.classList.toggle('hidden', !show);
             loadingText.textContent = text;
         }
 
-        // Function to map categories to colors
         function getCategoryColor(category) {
             const colors = {
                 'FINANCIAL': 'bg-green-100 text-green-800',
@@ -323,6 +313,7 @@
             }
         });
 
+        // Handle Drag and Drop events
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -339,23 +330,34 @@
             e.preventDefault();
             e.stopPropagation();
             dropZone.classList.remove('border-blue-500');
-            logDebug('File drop event triggered');
             if (e.dataTransfer.files.length > 0) {
                 const file = e.dataTransfer.files[0];
-                logDebug('File dropped:', file.name);
                 if (file.type === 'application/pdf') {
                     currentFile = file;
                     analyzeBtn.disabled = false;
                     dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
-                    logDebug('PDF file accepted');
                 } else {
                     alert('Please upload a PDF file');
                     currentFile = null;
                     analyzeBtn.disabled = true;
                     dropZone.querySelector('p').textContent = 'Drop your PDF document here or click to upload';
-                    logDebug('File rejected - not a PDF');
                 }
             }
+        });
+
+        // Tab Handling for Overview, Clause Analysis, Risks & Flags, Q&A
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                logDebug('Tab clicked:', button.dataset.tab);
+                document.querySelectorAll('.tab-button').forEach(b => {
+                    b.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
+                });
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+
+                // Highlight the active tab
+                button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
+                document.getElementById(`${button.dataset.tab}-tab`).classList.remove('hidden');
+            });
         });
 
         // Document Analysis
@@ -369,7 +371,7 @@
                 logDebug('Starting document analysis');
                 showLoading(true, 'Analyzing document...');
                 resultsSection.classList.add('hidden');
-                
+
                 const response = await fetch(`${BACKEND_URL}/analyze`, {
                     method: 'POST',
                     body: formData
@@ -377,7 +379,7 @@
 
                 const data = await response.json();
                 logDebug('Analysis response received:', data);
-                
+
                 if (!response.ok) {
                     throw new Error(data.detail || JSON.stringify(data) || 'Analysis failed');
                 }
@@ -392,6 +394,7 @@
             }
         });
 
+        // Function to display analysis results
         function displayResults(data) {
             logDebug('Displaying analysis results');
             const docType = data.document_type;
@@ -450,7 +453,7 @@
 
             // Display summary
             document.getElementById('summaryContent').textContent = analysis.summary;
-            
+
             // Display key terms
             const keyTermsHtml = analysis.key_terms?.map(term => `
                 <div class="bg-white shadow rounded-lg p-4">
