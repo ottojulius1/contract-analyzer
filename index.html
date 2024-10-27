@@ -327,7 +327,7 @@
                 });
 
                 const data = await response.json();
-                logDebug('Analysis response received:', data);
+                logDebug('Analysis data received:', data);  // Debug log to check the received data
 
                 if (!response.ok) {
                     throw new Error(data.detail || JSON.stringify(data) || 'Analysis failed');
@@ -426,6 +426,28 @@
                     </div>
                 </div>
             `).join('') || '';
+
+            // Display clause analysis
+            document.getElementById('clausesContent').innerHTML = analysis.clause_analysis?.clauses?.map(clause => `
+                <div class="bg-white shadow rounded-lg p-4">
+                    <div class="font-medium">${clause.clause_name}</div>
+                    <div class="text-gray-600 mt-1">${clause.clause_text}</div>
+                </div>
+            `).join('') || '<p>No key clauses found.</p>';
+
+            // Display missing clauses
+            document.getElementById('missingClausesContent').innerHTML = analysis.clause_analysis?.missing_clauses?.map(missing => `
+                <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg">
+                    ${missing}
+                </div>
+            `).join('') || '<p>No missing clauses identified.</p>';
+
+            // Display unusual provisions
+            document.getElementById('unusualProvisionsContent').innerHTML = analysis.clause_analysis?.unusual_provisions?.map(unusual => `
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    ${unusual}
+                </div>
+            `).join('') || '<p>No unusual provisions identified.</p>';
 
             // Display risks
             document.getElementById('risksContent').innerHTML = analysis.risks?.map(risk => `
