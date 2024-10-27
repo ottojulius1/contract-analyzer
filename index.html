@@ -116,6 +116,7 @@
                                 </div>
                             </div>
                         </div>
+
                         <!-- Risks Tab Content -->
                         <div id="risks-tab" class="tab-content hidden">
                             <div class="mt-4">
@@ -256,8 +257,10 @@
         </div>
     </div>
 
-    <!-- JavaScript -->
+    <!-- Script Section -->
     <script>
+        const BACKEND_URL = 'https://contract-analyzer-backend.onrender.com';  // Replace this with your actual backend URL
+
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
         const analyzeBtn = document.getElementById('analyzeBtn');
@@ -468,8 +471,8 @@
                         <span class="text-xs px-2 py-1 rounded ${getCategoryColor(date.importance)}">
                             ${date.importance}
                         </span>
+                        <div class="text-gray-600 mt-1">${date.date}</div>
                     </div>
-                    <div class="text-gray-600 mt-1">${date.date}</div>
                 </div>
             `).join('') || '';
 
