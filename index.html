@@ -282,27 +282,29 @@
             console.log([Debug] ${message}, data || '');
         }
 
-        // File Upload Handling for Analysis
-        fileInput.addEventListener('change', (e) => {
-            logDebug('File input change event triggered');
-            if (e.target.files.length > 0) {
-                const file = e.target.files[0];
-                logDebug('File selected:', file.name);
-                if (file.type === 'application/pdf') {
-                    currentFile = file;
-                    analyzeBtn.disabled = false;
-                    dropZone.querySelector('p').textContent = Selected: ${file.name};
-                    logDebug('PDF file accepted');
-                } else {
-                    alert('Please upload a PDF file');
-                    fileInput.value = '';
-                    currentFile = null;
-                    analyzeBtn.disabled = true;
-                    dropZone.querySelector('p').textContent = 'Drop your PDF document here or click to upload';
-                    logDebug('File rejected - not a PDF');
-                }
-            }
-        });
+        // File Upload Handling for AnalysisfileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+
+        // Check if the file is a PDF
+        if (file.type === 'application/pdf') {
+            // Save the file for further processing
+            currentFile = file;
+
+            // Enable the "Analyze Document" button
+            analyzeBtn.disabled = false;
+
+            // Show the file name in the drop zone
+            dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
+        } else {
+            // Show an error if the file is not a PDF
+            alert('Please upload a valid PDF file.');
+            fileInput.value = '';  // Clear the selected file
+            analyzeBtn.disabled = true;  // Disable the button
+            dropZone.querySelector('p').textContent = 'Drop your PDF document here or click to upload';
+        }
+    }
+});
 
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
