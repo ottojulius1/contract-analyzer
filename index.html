@@ -255,6 +255,7 @@
             </div>
         </div>
     </div>
+
     <script>
         // Constants and State
         const BACKEND_URL = 'https://contract-analyzer-backend.onrender.com';
@@ -284,25 +285,21 @@
 
         // File Upload Handling for Analysis
         fileInput.addEventListener('change', (e) => {
+            logDebug('File input change event triggered');
             if (e.target.files.length > 0) {
                 const file = e.target.files[0];
-
-                // Check if the file is a PDF
+                logDebug('File selected:', file.name);
                 if (file.type === 'application/pdf') {
-                    // Save the file for further processing
                     currentFile = file;
-
-                    // Enable the "Analyze Document" button
                     analyzeBtn.disabled = false;
-
-                    // Show the file name in the drop zone
                     dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
+                    logDebug('PDF file accepted');
                 } else {
-                    // Show an error if the file is not a PDF
-                    alert('Please upload a valid PDF file.');
-                    fileInput.value = '';  // Clear the selected file
-                    analyzeBtn.disabled = true;  // Disable the button
+                    alert('Please upload a PDF file');
+                    fileInput.value = '';
+                    analyzeBtn.disabled = true;
                     dropZone.querySelector('p').textContent = 'Drop your PDF document here or click to upload';
+                    logDebug('File rejected - not a PDF');
                 }
             }
         });
@@ -323,7 +320,6 @@
             e.preventDefault();
             e.stopPropagation();
             dropZone.classList.remove('border-blue-500');
-            
             logDebug('File drop event triggered');
             if (e.dataTransfer.files.length > 0) {
                 const file = e.dataTransfer.files[0];
@@ -342,114 +338,6 @@
                 }
             }
         });
-
-        // Navigation and Tab Handling
-        document.querySelectorAll('.main-nav-button').forEach(button => {
-            button.addEventListener('click', () => {
-                logDebug('Main navigation clicked:', button.dataset.section);
-                document.querySelectorAll('.main-nav-button').forEach(b => {
-                    b.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
-                });
-                button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
-
-                const section = button.dataset.section;
-                document.getElementById('analyze-section').classList.toggle('hidden', section !== 'analyze');
-                document.getElementById('compare-section').classList.toggle('hidden', section !== 'compare');
-
-                resultsSection.classList.add('hidden');
-                comparisonResults.classList.add('hidden');
-            });
-        });
-
-        // Tab Handling
-        document.querySelectorAll('.tab-button').forEach(button => {
-            button.addEventListener('click', () => {
-                logDebug('Tab clicked:', button.dataset.tab);
-                document.querySelectorAll('.tab-button').forEach(b => {
-                    b.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
-                });
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-                
-                button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
-                document.getElementById(`${button.dataset.tab}-tab`).classList.remove('hidden');
-            });
-        });
-
-        // Comparison Tab Handling
-        document.querySelectorAll('.comparison-tab').forEach(button => {
-            button.addEventListener('click', () => {
-                logDebug('Comparison tab clicked:', button.dataset.tab);
-                document.querySelectorAll('.comparison-tab').forEach(b => {
-                    b.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
-                });
-                document.querySelectorAll('.comparison-content').forEach(c => c.classList.add('hidden'));
-                
-                button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
-                document.getElementById(`${button.dataset.tab}-tab`).classList.remove('hidden');
-            });
-        });
-        // File Upload Handling for Comparison
-        ['1', '2'].forEach(num => {
-            const input = document.getElementById(`fileInput${num}`);
-            const zone = document.getElementById(`dropZone${num}`);
-            
-            input.addEventListener('change', (e) => {
-                logDebug(`Comparison file ${num} input change event triggered`);
-                if (e.target.files.length > 0) {
-                    const file = e.target.files[0];
-                    handleComparisonFile(file, num);
-                }
-            });
-
-            zone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                zone.classList.add('border-blue-500');
-            });
-
-            zone.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                zone.classList.remove('border-blue-500');
-            });
-
-            zone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                zone.classList.remove('border-blue-500');
-                
-                logDebug(`Comparison file ${num} drop event triggered`);
-                if (e.dataTransfer.files.length > 0) {
-                    const file = e.dataTransfer.files[0];
-                    handleComparisonFile(file, num);
-                }
-            });
-        });
-
-        function handleComparisonFile(file, num) {
-            logDebug(`Handling comparison file ${num}:`, file.name);
-            if (file.type === 'application/pdf') {
-                if (num === '1') {
-                    comparisonFiles.original = file;
-                } else {
-                    comparisonFiles.new = file;
-                }
-                document.getElementById(`dropZone${num}`).querySelector('p').textContent = `Selected: ${file.name}`;
-                compareBtn.disabled = !(comparisonFiles.original && comparisonFiles.new);
-                logDebug('Comparison PDF file accepted');
-            } else {
-                alert('Please upload a PDF file');
-                if (num === '1') {
-                    comparisonFiles.original = null;
-                } else {
-                    comparisonFiles.new = null;
-                }
-                document.getElementById(`dropZone${num}`).querySelector('p').textContent = 
-                    num === '1' ? 'Drop original PDF here or click to upload' : 'Drop new PDF here or click to upload';
-                compareBtn.disabled = true;
-                logDebug('Comparison file rejected - not a PDF');
-            }
-        }
 
         // Document Analysis
         analyzeBtn.addEventListener('click', async () => {
@@ -485,93 +373,10 @@
             }
         });
 
-        // Document Comparison
-        compareBtn.addEventListener('click', async () => {
-            if (!comparisonFiles.original || !comparisonFiles.new) return;
-
-            const formData = new FormData();
-            formData.append('file1', comparisonFiles.original);
-            formData.append('file2', comparisonFiles.new);
-
-            try {
-                logDebug('Starting document comparison');
-                showLoading(true, 'Comparing documents...');
-                comparisonResults.classList.add('hidden');
-                
-                const response = await fetch(`${BACKEND_URL}/compare`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-                logDebug('Comparison response received:', data);
-                
-                if (!response.ok) {
-                    throw new Error(data.detail || JSON.stringify(data) || 'Comparison failed');
-                }
-
-                displayComparisonResults(data);
-                comparisonResults.classList.remove('hidden');
-            } catch (error) {
-                console.error('Comparison error:', error);
-                alert('Error comparing documents: ' + error.message);
-            } finally {
-                showLoading(false);
-            }
-        });
-
-        // Q&A Handling
-        questionForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const question = questionInput.value.trim();
-            if (!question || !currentFile) return;
-
-            const formData = new FormData();
-            formData.append('file', currentFile);
-            formData.append('question', question);
-
-            try {
-                logDebug('Submitting question:', question);
-                const questionElement = addToQAHistory(question, 'Analyzing...');
-                showLoading(true, 'Getting answer...');
-
-                const response = await fetch(`${BACKEND_URL}/ask`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-                logDebug('Answer received:', data);
-                
-                if (!response.ok) {
-                    throw new Error(data.detail || 'Failed to get answer');
-                }
-
-                updateQAResponse(questionElement, data.answer);
-                questionInput.value = '';
-            } catch (error) {
-                console.error('Q&A error:', error);
-                alert('Error getting answer: ' + error.message);
-            } finally {
-                showLoading(false);
-            }
-        });
         // Helper Functions
         function showLoading(show, text = 'Processing...') {
             loadingState.classList.toggle('hidden', !show);
             loadingText.textContent = text;
-        }
-
-        function getCategoryColor(category) {
-            const colors = {
-                'FINANCIAL': 'bg-green-100 text-green-800',
-                'LEGAL': 'bg-blue-100 text-blue-800',
-                'OPERATIONAL': 'bg-yellow-100 text-yellow-800',
-                'HIGH': 'bg-red-100 text-red-800',
-                'MEDIUM': 'bg-yellow-100 text-yellow-800',
-                'LOW': 'bg-blue-100 text-blue-800'
-            };
-            return colors[category] || 'bg-gray-100 text-gray-800';
         }
 
         function displayResults(data) {
