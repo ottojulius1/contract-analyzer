@@ -191,7 +191,18 @@ def analyze_document(text: str, doc_type: str) -> Dict:
                     ],
                     "flags": [
                         {"severity": "HIGH", "issue": "description", "recommendation": "action"}
-                    ]
+                    ],
+                    "clause_analysis": {
+                        "key_clauses": [
+                            {"title": "clause title", "content": "clause content", "importance": "HIGH/MEDIUM/LOW"}
+                        ],
+                        "missing_clauses": [
+                            {"clause": "missing clause name", "recommendation": "why it should be included"}
+                        ],
+                        "unusual_provisions": [
+                            {"provision": "unusual provision", "explanation": "why it's unusual", "risk_level": "HIGH/MEDIUM/LOW"}
+                        ]
+                    }
                 }"""},
                 {"role": "user", "content": f"Analyze this document:\n\n{text}"}
             ],
