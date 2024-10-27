@@ -11,119 +11,239 @@
         <div class="bg-white rounded-lg shadow-lg p-6">
             <h1 class="text-2xl font-bold mb-6">DocGenius Pro</h1>
             
-            <!-- Upload Section -->
-            <div class="mb-8">
-                <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center" id="dropZone">
-                    <input type="file" id="fileInput" accept=".pdf" class="hidden">
-                    <label for="fileInput" class="cursor-pointer">
-                        <div class="text-gray-500">
-                            <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                            </svg>
-                            <p class="text-sm">Drop your PDF document here or click to upload</p>
-                        </div>
-                    </label>
-                </div>
-                <button id="analyzeBtn" class="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded-lg disabled:bg-gray-300" disabled>
-                    Analyze Document
-                </button>
+            <!-- Main Navigation -->
+            <div class="mb-6 border-b border-gray-200">
+                <nav class="flex space-x-4" aria-label="Main Navigation">
+                    <button class="main-nav-button px-3 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600" data-section="analyze">
+                        Analyze Document
+                    </button>
+                    <button class="main-nav-button px-3 py-2 text-sm font-medium" data-section="compare">
+                        Compare Documents
+                    </button>
+                </nav>
             </div>
 
-            <!-- Results Section -->
-            <div id="resultsSection" class="hidden">
-                <!-- Document Info Header -->
-                <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Document Type -->
-                    <div class="bg-blue-50 rounded-lg p-4">
-                        <h2 class="text-xl font-semibold mb-2">Document Information</h2>
-                        <div id="documentTypeContent"></div>
+            <!-- Single Document Analysis Section -->
+            <div id="analyze-section">
+                <!-- Upload Section -->
+                <div class="mb-8">
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center" id="dropZone">
+                        <input type="file" id="fileInput" accept=".pdf" class="hidden">
+                        <label for="fileInput" class="cursor-pointer">
+                            <div class="text-gray-500">
+                                <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                                <p class="text-sm">Drop your PDF document here or click to upload</p>
+                            </div>
+                        </label>
                     </div>
-                    <!-- Quick Stats -->
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <h2 class="text-xl font-semibold mb-2">Quick Analysis</h2>
-                        <div id="quickStatsContent"></div>
+                    <button id="analyzeBtn" class="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded-lg disabled:bg-gray-300" disabled>
+                        Analyze Document
+                    </button>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsSection" class="hidden">
+                    <!-- Document Info Header -->
+                    <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Document Type -->
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <h2 class="text-xl font-semibold mb-2">Document Information</h2>
+                            <div id="documentTypeContent"></div>
+                        </div>
+                        <!-- Quick Stats -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h2 class="text-xl font-semibold mb-2">Quick Analysis</h2>
+                            <div id="quickStatsContent"></div>
+                        </div>
+                    </div>
+
+                    <!-- Analysis Tabs Navigation -->
+                    <div class="mb-6">
+                        <div class="border-b border-gray-200">
+                            <nav class="flex space-x-4" aria-label="Tabs">
+                                <button class="tab-button px-3 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600" data-tab="overview">Overview</button>
+                                <button class="tab-button px-3 py-2 text-sm font-medium" data-tab="clauses">Clause Analysis</button>
+                                <button class="tab-button px-3 py-2 text-sm font-medium" data-tab="risks">Risks & Flags</button>
+                                <button class="tab-button px-3 py-2 text-sm font-medium" data-tab="qa">Q&A</button>
+                            </nav>
+                        </div>
+                        <!-- Overview Tab Content -->
+                        <div id="overview-tab" class="tab-content">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                <div class="space-y-6">
+                                    <div>
+                                        <h3 class="text-lg font-semibold mb-3">Summary</h3>
+                                        <div id="summaryContent" class="bg-gray-50 rounded-lg p-4"></div>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold mb-3">Key Terms</h3>
+                                        <div id="keyTermsContent" class="space-y-2"></div>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold mb-3">Important Dates</h3>
+                                        <div id="datesContent" class="space-y-2"></div>
+                                    </div>
+                                </div>
+                                <div class="space-y-6">
+                                    <div>
+                                        <h3 class="text-lg font-semibold mb-3">Action Items</h3>
+                                        <div id="actionItemsContent" class="space-y-2"></div>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold mb-3">Flags</h3>
+                                        <div id="flagsContent" class="space-y-2"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Clause Analysis Tab Content -->
+                        <div id="clauses-tab" class="tab-content hidden">
+                            <div class="mt-4 space-y-6">
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-3">Key Clauses</h3>
+                                    <div id="clausesContent" class="space-y-4"></div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-3">Missing Clauses</h3>
+                                    <div id="missingClausesContent" class="bg-yellow-50 rounded-lg p-4"></div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-3">Unusual Provisions</h3>
+                                    <div id="unusualProvisionsContent" class="bg-red-50 rounded-lg p-4"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Risks Tab Content -->
+                        <div id="risks-tab" class="tab-content hidden">
+                            <div class="mt-4">
+                                <div id="risksContent" class="space-y-4"></div>
+                            </div>
+                        </div>
+
+                        <!-- Q&A Tab Content -->
+                        <div id="qa-tab" class="tab-content hidden">
+                            <div class="mt-4">
+                                <form id="questionForm" class="flex space-x-2">
+                                    <input type="text" id="questionInput" 
+                                           class="flex-1 border rounded-lg px-4 py-2" 
+                                           placeholder="Ask a question about the document...">
+                                    <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
+                                        Ask
+                                    </button>
+                                </form>
+                                <div id="qaHistory" class="mt-4 space-y-4"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Comparison Section -->
+            <div id="compare-section" class="hidden">
+                <!-- Upload Section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Original Document -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3">Original Document</h3>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center" id="dropZone1">
+                            <input type="file" id="fileInput1" accept=".pdf" class="hidden">
+                            <label for="fileInput1" class="cursor-pointer">
+                                <div class="text-gray-500">
+                                    <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                    </svg>
+                                    <p class="text-sm">Drop original PDF here or click to upload</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <!-- New Document -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3">New Document</h3>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center" id="dropZone2">
+                            <input type="file" id="fileInput2" accept=".pdf" class="hidden">
+                            <label for="fileInput2" class="cursor-pointer">
+                                <div class="text-gray-500">
+                                    <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                    </svg>
+                                    <p class="text-sm">Drop new PDF here or click to upload</p>
+                                </div>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Main Tabs Navigation -->
-                <div class="mb-6">
-                    <div class="border-b border-gray-200">
-                        <nav class="flex space-x-4" aria-label="Tabs">
-                            <button class="tab-button px-3 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600" data-tab="overview">Overview</button>
-                            <button class="tab-button px-3 py-2 text-sm font-medium" data-tab="clauses">Clause Analysis</button>
-                            <button class="tab-button px-3 py-2 text-sm font-medium" data-tab="risks">Risks & Flags</button>
-                            <button class="tab-button px-3 py-2 text-sm font-medium" data-tab="qa">Q&A</button>
+                <button id="compareBtn" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg disabled:bg-gray-300 mb-8" disabled>
+                    Compare Documents
+                </button>
+                <!-- Comparison Results Section -->
+                <div id="comparisonResults" class="hidden">
+                    <!-- Summary of Changes -->
+                    <div class="bg-blue-50 rounded-lg p-4 mb-6">
+                        <h2 class="text-xl font-semibold mb-2">Summary of Changes</h2>
+                        <div id="changesSummaryContent"></div>
+                        <div class="grid grid-cols-3 gap-4 mt-4">
+                            <div class="bg-white rounded p-3 text-center">
+                                <div class="text-sm text-gray-600">Additions</div>
+                                <div id="additionsCount" class="text-xl font-semibold text-green-600">0</div>
+                            </div>
+                            <div class="bg-white rounded p-3 text-center">
+                                <div class="text-sm text-gray-600">Deletions</div>
+                                <div id="deletionsCount" class="text-xl font-semibold text-red-600">0</div>
+                            </div>
+                            <div class="bg-white rounded p-3 text-center">
+                                <div class="text-sm text-gray-600">Modifications</div>
+                                <div id="modificationsCount" class="text-xl font-semibold text-yellow-600">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Tabs -->
+                    <div class="border-b border-gray-200 mb-6">
+                        <nav class="flex space-x-4" aria-label="Comparison Tabs">
+                            <button class="comparison-tab px-3 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600" data-tab="changes">
+                                Significant Changes
+                            </button>
+                            <button class="comparison-tab px-3 py-2 text-sm font-medium" data-tab="clauses">
+                                Clause Changes
+                            </button>
+                            <button class="comparison-tab px-3 py-2 text-sm font-medium" data-tab="risks">
+                                Risk Analysis
+                            </button>
                         </nav>
                     </div>
 
-<!-- Overview Tab Content -->
-                    <div id="overview-tab" class="tab-content">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                            <div class="space-y-6">
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Summary</h3>
-                                    <div id="summaryContent" class="bg-gray-50 rounded-lg p-4"></div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Key Terms</h3>
-                                    <div id="keyTermsContent" class="space-y-2"></div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Important Dates</h3>
-                                    <div id="datesContent" class="space-y-2"></div>
-                                </div>
+                    <!-- Changes Tab -->
+                    <div id="changes-tab" class="comparison-content">
+                        <div class="space-y-4" id="significantChangesContent"></div>
+                    </div>
+
+                    <!-- Clauses Tab -->
+                    <div id="clauses-tab" class="comparison-content hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-3">Added Clauses</h3>
+                                <div id="addedClausesContent" class="space-y-2"></div>
                             </div>
-                            <div class="space-y-6">
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Action Items</h3>
-                                    <div id="actionItemsContent" class="space-y-2"></div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Flags</h3>
-                                    <div id="flagsContent" class="space-y-2"></div>
-                                </div>
+                            <div>
+                                <h3 class="text-lg font-semibold mb-3">Removed Clauses</h3>
+                                <div id="removedClausesContent" class="space-y-2"></div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold mb-3">Modified Clauses</h3>
+                                <div id="modifiedClausesContent" class="space-y-2"></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Clause Analysis Tab Content -->
-                    <div id="clauses-tab" class="tab-content hidden">
-                        <div class="mt-4 space-y-6">
-                            <div>
-                                <h3 class="text-lg font-semibold mb-3">Key Clauses</h3>
-                                <div id="clausesContent" class="space-y-4"></div>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-semibold mb-3">Missing Clauses</h3>
-                                <div id="missingClausesContent" class="bg-yellow-50 rounded-lg p-4"></div>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-semibold mb-3">Unusual Provisions</h3>
-                                <div id="unusualProvisionsContent" class="bg-red-50 rounded-lg p-4"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Risks Tab Content -->
-                    <div id="risks-tab" class="tab-content hidden">
-                        <div class="mt-4">
-                            <div id="risksContent" class="space-y-4"></div>
-                        </div>
-                    </div>
-
-                    <!-- Q&A Tab Content -->
-                    <div id="qa-tab" class="tab-content hidden">
-                        <div class="mt-4">
-                            <form id="questionForm" class="flex space-x-2">
-                                <input type="text" id="questionInput" 
-                                       class="flex-1 border rounded-lg px-4 py-2" 
-                                       placeholder="Ask a question about the document...">
-                                <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
-                                    Ask
-                                </button>
-                            </form>
-                            <div id="qaHistory" class="mt-4 space-y-4"></div>
-                        </div>
+                    <!-- Risks Tab -->
+                    <div id="risks-tab" class="comparison-content hidden">
+                        <div id="comparisonRisksContent" class="space-y-4"></div>
                     </div>
                 </div>
             </div>
@@ -131,89 +251,152 @@
             <!-- Loading State -->
             <div id="loadingState" class="hidden text-center py-8">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p class="mt-4 text-gray-600">Analyzing document...</p>
+                <p class="mt-4 text-gray-600" id="loadingText">Analyzing document...</p>
             </div>
         </div>
     </div>
 
-<script>
+    <script>
         const BACKEND_URL = 'https://contract-analyzer-backend.onrender.com';
         let currentFile = null;
+        let comparisonFiles = {
+            original: null,
+            new: null
+        };
 
         // DOM Elements
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
         const analyzeBtn = document.getElementById('analyzeBtn');
+        const compareBtn = document.getElementById('compareBtn');
         const loadingState = document.getElementById('loadingState');
+        const loadingText = document.getElementById('loadingText');
         const resultsSection = document.getElementById('resultsSection');
+        const comparisonResults = document.getElementById('comparisonResults');
         const questionForm = document.getElementById('questionForm');
         const questionInput = document.getElementById('questionInput');
         const qaHistory = document.getElementById('qaHistory');
 
+        // Main Navigation Handling
+        document.querySelectorAll('.main-nav-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons
+                document.querySelectorAll('.main-nav-button').forEach(b => {
+                    b.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
+                });
+                
+                // Add active class to clicked button
+                button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
+
+                // Show/hide sections
+                const section = button.dataset.section;
+                document.getElementById('analyze-section').classList.toggle('hidden', section !== 'analyze');
+                document.getElementById('compare-section').classList.toggle('hidden', section !== 'compare');
+
+                // Reset results when switching sections
+                resultsSection.classList.add('hidden');
+                comparisonResults.classList.add('hidden');
+            });
+        });
+
         // Tab Handling
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', () => {
-                // Remove active class from all buttons and hide all content
+                // Remove active class from all buttons and hide content
                 document.querySelectorAll('.tab-button').forEach(b => {
                     b.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
                 });
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
                 
-                // Add active class to clicked button and show its content
+                // Add active class to clicked button and show content
                 button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
                 document.getElementById(`${button.dataset.tab}-tab`).classList.remove('hidden');
             });
         });
 
-        // File Upload Handling
-fileInput.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    console.log('File selected:', file); // Debug log
-    if (file && file.type === 'application/pdf') {
-        currentFile = file;
-        analyzeBtn.disabled = false;
-        dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
-        console.log('File accepted:', file.name); // Debug log
-    } else {
-        alert('Please upload a PDF file');
-        fileInput.value = ''; // Reset the input
-        currentFile = null;
-        analyzeBtn.disabled = true;
-        dropZone.querySelector('p').textContent = 'Drop your PDF document here or click to upload';
-    }
-});
+        // Comparison Tab Handling
+        document.querySelectorAll('.comparison-tab').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.comparison-tab').forEach(b => {
+                    b.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
+                });
+                document.querySelectorAll('.comparison-content').forEach(c => c.classList.add('hidden'));
+                
+                button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
+                document.getElementById(`${button.dataset.tab}-tab`).classList.remove('hidden');
+            });
+        });
 
-dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dropZone.classList.add('border-blue-500');
-});
+        // File Upload Handling for Analysis
+        fileInput.addEventListener('change', function(e) {
+            handleFile(e.target.files[0]);
+        });
 
-dropZone.addEventListener('dragleave', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dropZone.classList.remove('border-blue-500');
-});
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-blue-500');
+        });
 
-dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dropZone.classList.remove('border-blue-500');
-    
-    const file = e.dataTransfer.files[0];
-    console.log('File dropped:', file); // Debug log
-    if (file && file.type === 'application/pdf') {
-        currentFile = file;
-        analyzeBtn.disabled = false;
-        dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
-        console.log('File accepted:', file.name); // Debug log
-    } else {
-        alert('Please upload a PDF file');
-        currentFile = null;
-        analyzeBtn.disabled = true;
-        dropZone.querySelector('p').textContent = 'Drop your PDF document here or click to upload';
-    }
-});
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-blue-500');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-500');
+            const file = e.dataTransfer.files[0];
+            handleFile(file);
+        });
+
+        function handleFile(file) {
+            if (file && file.type === 'application/pdf') {
+                currentFile = file;
+                analyzeBtn.disabled = false;
+                dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
+            } else {
+                alert('Please upload a PDF file');
+            }
+        }
+
+        // File Upload Handling for Comparison
+        ['1', '2'].forEach(num => {
+            const input = document.getElementById(`fileInput${num}`);
+            const zone = document.getElementById(`dropZone${num}`);
+            
+            input.addEventListener('change', function(e) {
+                handleComparisonFile(e.target.files[0], num);
+            });
+
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('border-blue-500');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('border-blue-500');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('border-blue-500');
+                const file = e.dataTransfer.files[0];
+                handleComparisonFile(file, num);
+            });
+        });
+
+        function handleComparisonFile(file, num) {
+            if (file && file.type === 'application/pdf') {
+                if (num === '1') {
+                    comparisonFiles.original = file;
+                } else {
+                    comparisonFiles.new = file;
+                }
+                document.getElementById(`dropZone${num}`).querySelector('p').textContent = `Selected: ${file.name}`;
+                compareBtn.disabled = !(comparisonFiles.original && comparisonFiles.new);
+            } else {
+                alert('Please upload a PDF file');
+            }
+        }
 
         // Document Analysis
         analyzeBtn.addEventListener('click', async () => {
@@ -223,7 +406,7 @@ dropZone.addEventListener('drop', (e) => {
             formData.append('file', currentFile);
 
             try {
-                showLoading(true);
+                showLoading(true, 'Analyzing document...');
                 resultsSection.classList.add('hidden');
                 
                 const response = await fetch(`${BACKEND_URL}/analyze`, {
@@ -247,6 +430,39 @@ dropZone.addEventListener('drop', (e) => {
             }
         });
 
+        // Document Comparison
+        compareBtn.addEventListener('click', async () => {
+            if (!comparisonFiles.original || !comparisonFiles.new) return;
+
+            const formData = new FormData();
+            formData.append('file1', comparisonFiles.original);
+            formData.append('file2', comparisonFiles.new);
+
+            try {
+                showLoading(true, 'Comparing documents...');
+                comparisonResults.classList.add('hidden');
+                
+                const response = await fetch(`${BACKEND_URL}/compare`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.detail || JSON.stringify(data) || 'Comparison failed');
+                }
+
+                displayComparisonResults(data);
+            } catch (error) {
+                console.error('Comparison error:', error);
+                alert('Error comparing documents: ' + error.message);
+            } finally {
+                showLoading(false);
+                comparisonResults.classList.remove('hidden');
+            }
+        });
+
         // Q&A Handling
         questionForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -259,7 +475,7 @@ dropZone.addEventListener('drop', (e) => {
 
             try {
                 const questionElement = addToQAHistory(question, 'Analyzing...');
-                showLoading(true);
+                showLoading(true, 'Getting answer...');
 
                 const response = await fetch(`${BACKEND_URL}/ask`, {
                     method: 'POST',
@@ -283,8 +499,9 @@ dropZone.addEventListener('drop', (e) => {
         });
 
         // Helper Functions
-        function showLoading(show) {
+        function showLoading(show, text = 'Processing...') {
             loadingState.classList.toggle('hidden', !show);
+            loadingText.textContent = text;
         }
 
         function getCategoryColor(category) {
@@ -337,162 +554,4 @@ dropZone.addEventListener('drop', (e) => {
                 <div class="grid grid-cols-2 gap-4">
                     <div class="p-3 bg-white rounded-lg shadow">
                         <div class="text-sm text-gray-600">Key Terms</div>
-                        <div class="text-xl font-semibold">${analysis.key_terms?.length || 0}</div>
-                    </div>
-                    <div class="p-3 bg-white rounded-lg shadow">
-                        <div class="text-sm text-gray-600">Important Dates</div>
-                        <div class="text-xl font-semibold">${analysis.dates?.length || 0}</div>
-                    </div>
-                    <div class="p-3 bg-white rounded-lg shadow">
-                        <div class="text-sm text-gray-600">Risks Identified</div>
-                        <div class="text-xl font-semibold">${analysis.risks?.length || 0}</div>
-                    </div>
-                    <div class="p-3 bg-white rounded-lg shadow">
-                        <div class="text-sm text-gray-600">Clauses Analyzed</div>
-                        <div class="text-xl font-semibold">${analysis.clause_analysis?.clauses?.length || 0}</div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('quickStatsContent').innerHTML = quickStatsHtml;
-
-            // Display summary
-            document.getElementById('summaryContent').textContent = analysis.summary;
-            
-            // Display key terms
-            const keyTermsHtml = analysis.key_terms.map(term => `
-                <div class="bg-white shadow rounded-lg p-4">
-                    <div class="flex justify-between items-start">
-                        <div class="font-medium">${term.term}</div>
-                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(term.category)}">
-                            ${term.category}
-                        </span>
-                    </div>
-                    <div class="text-gray-600 mt-1">${term.value}</div>
-                </div>
-            `).join('');
-            document.getElementById('keyTermsContent').innerHTML = keyTermsHtml;
-
-            // Display dates
-            const datesHtml = analysis.dates.map(date => `
-                <div class="bg-white shadow rounded-lg p-4">
-                    <div class="flex justify-between items-start">
-                        <div class="font-medium">${date.event}</div>
-                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(date.importance)}">
-                            ${date.importance}
-                        </span>
-                    </div>
-                    <div class="text-gray-600 mt-1">${date.date}</div>
-                </div>
-            `).join('');
-            document.getElementById('datesContent').innerHTML = datesHtml;
-
-            // Display risks
-            const risksHtml = analysis.risks.map(risk => `
-                <div class="bg-white shadow rounded-lg p-4">
-                    <div class="flex justify-between items-start">
-                        <div class="font-medium">${risk.description || risk}</div>
-                        ${risk.severity ? `
-                            <span class="text-xs px-2 py-1 rounded ${getCategoryColor(risk.severity)}">
-                                ${risk.severity}
-                            </span>
-                        ` : ''}
-                    </div>
-                    ${risk.category ? `
-                        <div class="text-sm text-gray-600 mt-1">Category: ${risk.category}</div>
-                    ` : ''}
-                </div>
-            `).join('');
-            document.getElementById('risksContent').innerHTML = risksHtml;
-
-            // Display clause analysis if available
-            if (analysis.clause_analysis) {
-                // Key Clauses
-                if (analysis.clause_analysis.clauses && analysis.clause_analysis.clauses.length > 0) {
-                    const clausesHtml = analysis.clause_analysis.clauses.map(clause => `
-                        <div class="bg-white shadow rounded-lg p-4">
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="font-medium">${clause.type || 'Unnamed Clause'}</div>
-                                <span class="text-xs px-2 py-1 rounded ${clause.is_standard ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
-                                    ${clause.is_standard ? 'Standard' : 'Non-Standard'}
-                                </span>
-                            </div>
-                            <div class="text-gray-600 mb-2">${clause.text || 'No content available'}</div>
-                            ${clause.risks && clause.risks.length > 0 ? `
-                                <div class="mt-2">
-                                    <div class="text-sm font-medium">Risks:</div>
-                                    <ul class="list-disc pl-4 text-sm text-red-600">
-                                        ${clause.risks.map(risk => `<li>${risk}</li>`).join('')}
-                                    </ul>
-                                </div>
-                            ` : ''}
-                            ${clause.recommendations && clause.recommendations.length > 0 ? `
-                                <div class="mt-2">
-                                    <div class="text-sm font-medium">Recommendations:</div>
-                                    <ul class="list-disc pl-4 text-sm text-blue-600">
-                                        ${clause.recommendations.map(rec => `<li>${rec}</li>`).join('')}
-                                    </ul>
-                                </div>
-                            ` : ''}
-                        </div>
-                    `).join('');
-                    document.getElementById('clausesContent').innerHTML = clausesHtml;
-                } else {
-                    document.getElementById('clausesContent').innerHTML = `
-                        <div class="bg-gray-50 rounded-lg p-4 text-gray-600">
-                            No specific clauses were identified in the analysis.
-                        </div>
-                    `;
-                }
-
-                // Missing Clauses
-                const missingClausesHtml = analysis.clause_analysis.missing_clauses && analysis.clause_analysis.missing_clauses.length > 0 
-                    ? `<ul class="list-disc pl-4">
-                        ${analysis.clause_analysis.missing_clauses.map(clause => `
-                            <li class="text-yellow-800">${clause}</li>
-                        `).join('')}
-                    </ul>`
-                    : '<p class="text-green-800">No missing standard clauses detected.</p>';
-                document.getElementById('missingClausesContent').innerHTML = missingClausesHtml;
-
-                // Unusual Provisions
-                const unusualProvisionsHtml = analysis.clause_analysis.unusual_provisions && analysis.clause_analysis.unusual_provisions.length > 0
-                    ? `<ul class="list-disc pl-4">
-                        ${analysis.clause_analysis.unusual_provisions.map(provision => `
-                            <li class="text-red-800">${provision}</li>
-                        `).join('')}
-                    </ul>`
-                    : '<p class="text-green-800">No unusual provisions detected.</p>';
-                document.getElementById('unusualProvisionsContent').innerHTML = unusualProvisionsHtml;
-            } else {
-                // Set default content when no clause analysis is available
-                document.getElementById('clausesContent').innerHTML = `
-                    <div class="bg-gray-50 rounded-lg p-4 text-gray-600">
-                        Clause analysis is not available for this document.
-                    </div>
-                `;
-                document.getElementById('missingClausesContent').innerHTML = `
-                    <p class="text-gray-600">No clause analysis available.</p>
-                `;
-                document.getElementById('unusualProvisionsContent').innerHTML = `
-                    <p class="text-gray-600">No clause analysis available.</p>
-                `;
-            }
-        }
-
-        function addToQAHistory(question, answer) {
-            const qaElement = document.createElement('div');
-            qaElement.className = 'border rounded-lg p-4';
-            qaElement.innerHTML = `
-                <div class="font-medium">Q: ${question}</div>
-                <div class="text-gray-600 mt-2 answer">A: ${answer}</div>
-            `;
-            qaHistory.insertBefore(qaElement, qaHistory.firstChild);
-            return qaElement;
-        }
-
-        function updateQAResponse(element, answer) {
-            element.querySelector('.answer').textContent = `A: ${answer}`;
-        }
-    </script>
-</body>
-</html>
+                        <div class="text-xl font-semibold">${analysis.key_terms?.length || 0}</div
