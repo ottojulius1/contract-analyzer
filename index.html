@@ -142,113 +142,6 @@
                 </div>
             </div>
 
-            <!-- Document Comparison Section -->
-            <div id="compare-section" class="hidden">
-                <!-- Upload Section -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <!-- Original Document -->
-                    <div>
-                        <h3 class="text-lg font-semibold mb-3">Original Document</h3>
-                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors duration-200" id="dropZone1">
-                            <input type="file" id="fileInput1" accept=".pdf" class="hidden">
-                            <label for="fileInput1" class="cursor-pointer block">
-                                <div class="text-gray-500">
-                                    <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                                    </svg>
-                                    <p class="text-sm">Drop original PDF here or click to upload</p>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                    <!-- New Document -->
-                    <div>
-                        <h3 class="text-lg font-semibold mb-3">New Document</h3>
-                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors duration-200" id="dropZone2">
-                            <input type="file" id="fileInput2" accept=".pdf" class="hidden">
-                            <label for="fileInput2" class="cursor-pointer block">
-                                <div class="text-gray-500">
-                                    <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                                    </svg>
-                                    <p class="text-sm">Drop new PDF here or click to upload</p>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <button id="compareBtn" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg disabled:bg-gray-300 hover:bg-blue-600 transition-colors duration-200 mb-8" disabled>
-                    Compare Documents
-                </button>
-
-                <!-- Comparison Results Section -->
-                <div id="comparisonResults" class="hidden">
-                    <!-- Summary of Changes -->
-                    <div class="bg-blue-50 rounded-lg p-4 mb-6">
-                        <h2 class="text-xl font-semibold mb-2">Summary of Changes</h2>
-                        <div id="changesSummaryContent"></div>
-                        <div class="grid grid-cols-3 gap-4 mt-4">
-                            <div class="bg-white rounded p-3 text-center">
-                                <div class="text-sm text-gray-600">Additions</div>
-                                <div id="additionsCount" class="text-xl font-semibold text-green-600">0</div>
-                            </div>
-                            <div class="bg-white rounded p-3 text-center">
-                                <div class="text-sm text-gray-600">Deletions</div>
-                                <div id="deletionsCount" class="text-xl font-semibold text-red-600">0</div>
-                            </div>
-                            <div class="bg-white rounded p-3 text-center">
-                                <div class="text-sm text-gray-600">Modifications</div>
-                                <div id="modificationsCount" class="text-xl font-semibold text-yellow-600">0</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Comparison Tabs -->
-                    <div class="border-b border-gray-200 mb-6">
-                        <nav class="flex space-x-4" aria-label="Comparison Tabs">
-                            <button class="comparison-tab px-3 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600" data-tab="changes">
-                                Significant Changes
-                            </button>
-                            <button class="comparison-tab px-3 py-2 text-sm font-medium" data-tab="clauses">
-                                Clause Changes
-                            </button>
-                            <button class="comparison-tab px-3 py-2 text-sm font-medium" data-tab="risks">
-                                Risk Analysis
-                            </button>
-                        </nav>
-                    </div>
-
-                    <!-- Changes Tab -->
-                    <div id="changes-tab" class="comparison-content">
-                        <div class="space-y-4" id="significantChangesContent"></div>
-                    </div>
-
-                    <!-- Clauses Tab -->
-                    <div id="clauses-tab" class="comparison-content hidden">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div>
-                                <h3 class="text-lg font-semibold mb-3">Added Clauses</h3>
-                                <div id="addedClausesContent" class="space-y-2"></div>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-semibold mb-3">Removed Clauses</h3>
-                                <div id="removedClausesContent" class="space-y-2"></div>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-semibold mb-3">Modified Clauses</h3>
-                                <div id="modifiedClausesContent" class="space-y-2"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Risks Tab -->
-                    <div id="risks-tab" class="comparison-content hidden">
-                        <div id="comparisonRisksContent" class="space-y-4"></div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Loading State -->
             <div id="loadingState" class="hidden text-center py-8">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
@@ -267,6 +160,7 @@
         const loadingState = document.getElementById('loadingState');
         const loadingText = document.getElementById('loadingText');
         const resultsSection = document.getElementById('resultsSection');
+        let currentFile = null;
 
         // Debug logging function
         function logDebug(message, data = null) {
@@ -357,6 +251,63 @@
                 document.getElementById(`${button.dataset.tab}-tab`).classList.remove('hidden');
             });
         });
+
+        // Q&A Submission Handling
+        const questionForm = document.getElementById('questionForm');
+        const questionInput = document.getElementById('questionInput');
+        const qaHistory = document.getElementById('qaHistory');
+
+        questionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();  // Prevent form from refreshing the page
+            const question = questionInput.value.trim();
+            if (!question || !currentFile) return;
+
+            const formData = new FormData();
+            formData.append('file', currentFile);
+            formData.append('question', question);
+
+            try {
+                logDebug('Submitting question:', question);
+                const questionElement = addToQAHistory(question, 'Analyzing...');
+                showLoading(true, 'Getting answer...');
+
+                const response = await fetch(`${BACKEND_URL}/ask`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                logDebug('Answer received:', data);
+                
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to get answer');
+                }
+
+                updateQAResponse(questionElement, data.answer);
+                questionInput.value = '';  // Clear input field
+            } catch (error) {
+                console.error('Q&A error:', error);
+                alert('Error getting answer: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // Helper Functions for Q&A History
+        function addToQAHistory(question, answer) {
+            const qaElement = document.createElement('div');
+            qaElement.className = 'border rounded-lg p-4';
+            qaElement.innerHTML = `
+                <div class="font-medium">Q: ${question}</div>
+                <div class="text-gray-600 mt-2 answer">A: ${answer}</div>
+            `;
+            qaHistory.insertBefore(qaElement, qaHistory.firstChild);
+            return qaElement;
+        }
+
+        function updateQAResponse(element, answer) {
+            element.querySelector('.answer').textContent = `A: ${answer}`;
+        }
 
         // Document Analysis
         analyzeBtn.addEventListener('click', async () => {
