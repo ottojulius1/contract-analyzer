@@ -24,61 +24,76 @@ app.add_middleware(
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def create_analysis_prompt(text: str) -> str:
-    return """Analyze this legal document and provide a detailed response in the following JSON format:
-    {
-        "document_type": {
-            "type": "specific document type",
-            "industry": "specific industry sector",
-            "jurisdiction": "governing jurisdiction",
-            "parties": ["list all parties involved"]
-        },
-        "analysis": {
-            "summary": "Provide a detailed, specific summary of this exact document including: 1) What exactly this document does 2) The specific parties and their roles 3) Key terms, payments, or monetary values 4) Important dates or deadlines 5) Main obligations of each party. Use actual details from the document.",
-            "key_terms": [
+    return """You are conducting a legal document analysis. You MUST:
+1. Extract and quote ACTUAL text from the document
+2. Use REAL names, dates, numbers, and terms found in the document
+3. DO NOT generate generic descriptions
+4. Every point must cite specific details from the document
+
+Analyze this legal document and provide a structured response that includes ONLY ACTUAL content from the document:
+{
+    "document_type": {
+        "type": "[QUOTE exact title/heading of document]",
+        "industry": "[EXTRACT actual industry references from document]",
+        "jurisdiction": "[QUOTE jurisdiction clause or location references]",
+        "parties": [
+            "[LIST actual party names as written in document]"
+        ]
+    },
+    "analysis": {
+        "summary": "[EXTRACT KEY DETAILS ONLY: 1) Exact names of all parties 2) Specific service/employment/subject matter described 3) Actual monetary values and payment terms 4) Real dates and deadlines 5) Quote unique or important clauses. NO GENERIC DESCRIPTIONS.]",
+        "key_terms": [
+            {
+                "term": "[QUOTE section heading or key term]",
+                "value": "[QUOTE actual clause text defining this term]",
+                "category": "FINANCIAL/LEGAL/OPERATIONAL",
+                "source": "[Reference section number or location]"
+            }
+        ],
+        "dates": [
+            {
+                "date": "[QUOTE actual date from document]",
+                "event": "[DESCRIBE specific event using document language]",
+                "importance": "HIGH/MEDIUM/LOW",
+                "source": "[Reference section number or location]"
+            }
+        ],
+        "clause_analysis": {
+            "clauses": [
                 {
-                    "term": "specific term from document",
-                    "value": "actual details and implications",
-                    "category": "FINANCIAL/LEGAL/OPERATIONAL"
+                    "clause_name": "[QUOTE actual clause heading]",
+                    "clause_text": "[QUOTE exact clause text]",
+                    "analysis": "[Explain implications using specifics from the clause]",
+                    "location": "[Section number or location]"
                 }
             ],
-            "dates": [
-                {
-                    "date": "actual date",
-                    "event": "specific event or deadline",
-                    "importance": "HIGH/MEDIUM/LOW"
-                }
+            "missing_clauses": [
+                "[List standard clauses that are actually missing, be specific]"
             ],
-            "clause_analysis": {
-                "clauses": [
-                    {
-                        "clause_name": "name of specific clause",
-                        "clause_text": "actual text from document",
-                        "analysis": "implications and importance"
-                    }
-                ],
-                "missing_clauses": ["important standard clauses that are missing"],
-                "unusual_provisions": ["any unusual or noteworthy provisions"]
-            },
-            "risks": [
-                {
-                    "risk": "specific risk identified",
-                    "severity": "HIGH/MEDIUM/LOW",
-                    "mitigation": "specific mitigation strategy"
-                }
+            "unusual_provisions": [
+                "[QUOTE any non-standard clauses found, with section references]"
             ]
-        }
+        },
+        "risks": [
+            {
+                "risk": "[Describe specific risk based on actual clause content]",
+                "severity": "HIGH/MEDIUM/LOW",
+                "source": "[Quote relevant clause text]",
+                "mitigation": "[Specific mitigation based on document terms]"
+            }
+        ]
     }
+}
 
-Document text:
-{text}
+IMPORTANT:
+- Every field must contain ACTUAL content from the document
+- Use quotes and section references
+- Do not generate generic text
+- If information isn't in the document, say "Not specified in document" rather than making assumptions
+- Focus on unique aspects of this specific document
 
-Important instructions:
-1. Be specific - use actual details from the document
-2. Never provide generic descriptions
-3. Include all monetary values, dates, and specific terms found
-4. Quote actual clause text when relevant
-5. For the summary, focus on what makes this document unique and important"""
-
+Document text to analyze:
+{text}"""
 @app.post("/analyze")
 async def analyze_document(file: UploadFile = File(...)):
     try:
