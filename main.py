@@ -22,133 +22,73 @@ app.add_middleware(
 )
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
 def create_analysis_prompt(text: str) -> str:
-    return """You are an expert legal document analyzer. First identify the exact type of legal document, then provide a detailed analysis based on its actual content.
+    return """You are an expert legal document analyzer. Analyze this document and provide specific details with exact quotes and references.
 
-STEP 1: Document Classification
-First, identify the specific type of document (e.g., Retainer Agreement, Employment Contract, Settlement Agreement, Contract, Lease, etc.) and its key identifiers.
-
-STEP 2: Detailed Analysis
-Based on the identified document type, extract and analyze the following FROM THE ACTUAL DOCUMENT TEXT:
-
+Required Format:
 {
     "document_type": {
-        "type": "QUOTE the exact document title/type as written",
-        "category": "Legal category (e.g., Corporate, Family Law, Real Estate, etc.)",
-        "jurisdiction": "QUOTE any jurisdiction mentioned",
+        "type": "QUOTE exact document title/type",
+        "category": "QUOTE legal category (e.g., Family Law, Corporate, etc.)",
+        "jurisdiction": "QUOTE jurisdiction",
         "parties": {
             "party1": {
-                "name": "EXACT name as written",
-                "role": "Role as specified in document"
+                "name": "QUOTE exact name",
+                "role": "QUOTE role"
             },
             "party2": {
-                "name": "EXACT name as written",
-                "role": "Role as specified in document"
+                "name": "QUOTE exact name",
+                "role": "QUOTE role"
             }
         },
-        "matter": "QUOTE the specific matter or purpose",
-        "date": "QUOTE document date"
+        "matter": "QUOTE specific matter/case reference"
     },
     "analysis": {
-        "summary": "Write a SPECIFIC summary that includes:
-            1. Exact purpose of this document
-            2. Actual names of all parties
-            3. All monetary values mentioned
-            4. Key dates and deadlines
-            5. Main obligations
-            NO GENERIC DESCRIPTIONS - use actual details from document",
-        
+        "summary": "SPECIFIC summary using only actual document content, including: 1) Document purpose, 2) Party names and roles, 3) Key monetary values, 4) Important dates, 5) Main obligations",
         "key_terms": [
             {
-                "term": "QUOTE the exact term/section heading",
+                "term": "QUOTE section name/term",
                 "content": "QUOTE relevant text",
-                "value": "For monetary terms, QUOTE exact amounts",
-                "category": "FINANCIAL/LEGAL/OPERATIONAL",
-                "location": "Section or page reference"
+                "value": "QUOTE monetary value if applicable",
+                "category": "FINANCIAL/LEGAL/OPERATIONAL"
             }
         ],
-        
-        "monetary_provisions": [
-            {
-                "type": "Type of payment/fee/amount",
-                "amount": "QUOTE exact amount",
-                "details": "QUOTE relevant text",
-                "location": "Section reference"
-            }
-        ],
-        
         "dates_and_deadlines": [
             {
                 "date": "QUOTE exact date",
-                "event": "QUOTE what happens on this date",
+                "event": "QUOTE related event/requirement",
                 "significance": "HIGH/MEDIUM/LOW",
                 "details": "QUOTE relevant text"
             }
         ],
-        
         "key_provisions": [
             {
-                "title": "QUOTE section/provision title",
+                "title": "QUOTE provision name",
                 "text": "QUOTE actual provision text",
-                "significance": "Explain significance using details from document",
-                "location": "Section reference"
+                "significance": "Explain using document content"
             }
         ],
-        
-        "obligations": {
-            "party1": [
-                "LIST specific obligations QUOTED from document"
-            ],
-            "party2": [
-                "LIST specific obligations QUOTED from document"
-            ]
-        },
-        
-        "critical_terms": [
-            {
-                "term": "QUOTE important term",
-                "explanation": "Explain using ACTUAL document content",
-                "importance": "HIGH/MEDIUM/LOW"
-            }
-        ],
-        
-        "unusual_provisions": [
-            {
-                "provision": "QUOTE any unusual/notable provisions",
-                "analysis": "Explain why notable",
-                "location": "Section reference"
-            }
-        ],
-        
         "risks": [
             {
-                "risk": "Identify specific risk based on document content",
+                "risk": "Describe risk using document content",
                 "severity": "HIGH/MEDIUM/LOW",
-                "basis": "QUOTE relevant text",
-                "mitigation": "If mentioned in document, QUOTE mitigation measures"
+                "basis": "QUOTE relevant text"
             }
         ]
     }
 }
 
-IMPORTANT RULES:
-1. NEVER make up or infer information
-2. ONLY use text actually present in the document
-3. Use "Not specified" if information isn't in the document
-4. QUOTE actual document text wherever possible
-5. Include section/page references
-6. Focus on what makes this specific document unique
-7. Adapt analysis based on document type
-8. If monetary values, dates, or specific terms exist, always include them
-9. Identify unusual or notable provisions
-10. Note any missing standard provisions for this type of document
+REQUIREMENTS:
+1. Use EXACT QUOTES from the document
+2. Include ALL monetary values found
+3. Include ALL dates and deadlines
+4. Reference specific sections
+5. NO generic text - use actual document content
+6. If information isn't in document, mark as "Not specified"
 
-Remember: This tool will be used for ALL types of legal documents, so first identify the type, then provide appropriate analysis for that specific type of document.
-
-Document to analyze:
+Document text to analyze:
 {text}"""
-@app.post("/analyze")
+    @app.post("/analyze")
 async def analyze_document(file: UploadFile = File(...)):
     try:
         contents = await file.read()
@@ -157,7 +97,7 @@ async def analyze_document(file: UploadFile = File(...)):
         
         for page_num in range(len(pdf_reader.pages)):
             page_text = pdf_reader.pages[page_num].extract_text()
-            extracted_text += f"\n{page_text}"
+            extracted_text += f"\nPage {page_num + 1}:\n{page_text}"
         
         logger.debug(f"Extracted {len(extracted_text)} characters from PDF")
         
@@ -166,7 +106,7 @@ async def analyze_document(file: UploadFile = File(...)):
             messages=[
                 {
                     "role": "system",
-                    "content": "You are an expert legal analyst. Provide detailed, specific analysis based solely on the document content."
+                    "content": "You are an expert legal analyst. Extract and quote specific details from the document."
                 },
                 {"role": "user", "content": create_analysis_prompt(extracted_text)}
             ],
@@ -197,24 +137,24 @@ async def ask_question(file: UploadFile = File(...), question: str = Form(...)):
         extracted_text = ""
         
         for page_num in range(len(pdf_reader.pages)):
-            extracted_text += pdf_reader.pages[page_num].extract_text()
+            extracted_text += f"\nPage {page_num + 1}:\n{pdf_reader.pages[page_num].extract_text()}"
         
-        prompt = f"""Context: {extracted_text}
+        prompt = f"""Document text: {extracted_text}
 
 Question: {question}
 
-Provide a focused answer that:
-1. Cites specific sections of the document
-2. Uses actual details and quotes when relevant
-3. Explains any legal implications
-4. Stays strictly within the document's content"""
+Provide a detailed answer that:
+1. QUOTES specific sections of the document
+2. References exact page/section numbers
+3. Uses only information from the document
+4. Explains any legal implications found in the document"""
         
         response = client.chat.completions.create(
             model="gpt-3.5-turbo-16k",
             messages=[
                 {
                     "role": "system",
-                    "content": "You are an expert legal analyst providing detailed answers about legal documents."
+                    "content": "You are an expert legal analyst. Quote and reference specific parts of the document in your answers."
                 },
                 {"role": "user", "content": prompt}
             ],
