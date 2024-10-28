@@ -316,102 +316,127 @@
                 document.getElementById('docJurisdiction').textContent = data.document_type.jurisdiction;
                 document.getElementById('docMatter').textContent = data.document_type.matter;
 
-                // Parties
-                const partiesContainer = document.getElementById('docParties');
-                partiesContainer.innerHTML = '';
-                for (const key in data.document_type.parties) {
-                    const party = data.document_type.parties[key];
-                    const div = document.createElement('div');
-                    div.className = 'text-sm p-2 bg-blue-50 rounded';
-                    div.textContent = `${party.name} (${party.role})`;
-                    partiesContainer.appendChild(div);
-                }
+                // Document Type Information
+document.getElementById('docType').textContent = data.document_metadata.type.primary;
+document.getElementById('docCategory').textContent = data.document_metadata.type.category;
+document.getElementById('docJurisdiction').textContent = data.document_metadata.jurisdiction.state;
 
-                // Quick Stats
-                document.getElementById('keyTermsCount').textContent = 
-                    (data.analysis.key_terms || []).length;
-                document.getElementById('datesCount').textContent = 
-                    (data.analysis.dates_and_deadlines || []).length;
-                document.getElementById('provisionsCount').textContent = 
-                    (data.analysis.key_provisions || []).length;
-                document.getElementById('risksCount').textContent = 
-                    (data.analysis.risks || []).length;
+// Parties
+const partiesList = document.getElementById('docParties');
+partiesList.innerHTML = '';
+if (data.document_metadata.parties.primary_parties) {
+    data.document_metadata.parties.primary_parties.forEach(party => {
+        const div = document.createElement('div');
+        div.className = 'text-sm p-2 bg-blue-50 rounded';
+        div.textContent = `${party.name} (${party.role})`;
+        partiesList.appendChild(div);
+    });
+}
 
-                // Summary
-                document.getElementById('summaryContent').textContent = data.analysis.summary;
+// Quick Stats
+document.getElementById('keyTermsCount').textContent = 
+    (data.financial_structure?.fee_arrangement?.base_rates || []).length;
+document.getElementById('datesCount').textContent = 
+    (data.key_dates?.document_dates || []).length;
+document.getElementById('provisionsCount').textContent = 
+    (data.critical_provisions?.key_clauses || []).length;
+document.getElementById('risksCount').textContent = 
+    ((data.risk_analysis?.financial_risks || []).length +
+     (data.risk_analysis?.legal_risks || []).length +
+     (data.risk_analysis?.operational_risks || []).length);
 
-                // Key Terms
-                document.getElementById('keyTermsContent').innerHTML = 
-                    (data.analysis.key_terms || []).map(term => `
-                        <div class="bg-white shadow rounded-lg p-4">
-                            <div class="flex justify-between items-start">
-                                <div class="font-medium">${term.term}</div>
-                                <span class="text-xs px-2 py-1 rounded ${getCategoryColor(term.category)}">
-                                    ${term.category}
-                                </span>
-                            </div>
-                            <div class="text-gray-600 mt-2">${term.content}</div>
-                            ${term.value ? `
-                                <div class="mt-2 text-green-600 font-medium">
-                                    Value: ${term.value}
-                                </div>
-                            ` : ''}
-                        </div>
-                    `).join('') || '<p class="text-gray-500">No key terms identified</p>';
+// Summary (if you have a summary section)
+if (data.document_metadata.matter_details?.subject_matter) {
+    document.getElementById('summaryContent').textContent = data.document_metadata.matter_details.subject_matter;
+}
 
-                // Dates
-                document.getElementById('datesContent').innerHTML = 
-                    (data.analysis.dates_and_deadlines || []).map(date => `
-                        <div class="bg-white shadow rounded-lg p-4">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <div class="font-medium">${date.event}</div>
-                                    <div class="text-blue-600">${date.date}</div>
-                                </div>
-                                <span class="text-xs px-2 py-1 rounded ${getCategoryColor(date.significance)}">
-                                    ${date.significance}
-                                </span>
-                            </div>
-                            <div class="text-gray-600 mt-2">${date.details}</div>
-                        </div>
-                    `).join('') || '<p class="text-gray-500">No important dates identified</p>';
+// Key Terms
+const keyTermsContent = document.getElementById('keyTermsContent');
+keyTermsContent.innerHTML = '';
+if (data.financial_structure?.fee_arrangement?.base_rates) {
+    data.financial_structure.fee_arrangement.base_rates.forEach(rate => {
+        const div = document.createElement('div');
+        div.className = 'bg-white shadow rounded-lg p-4';
+        div.innerHTML = `
+            <div class="flex justify-between items-start">
+                <div class="font-medium">${rate.person}</div>
+                <span class="text-xs px-2 py-1 rounded bg-green-100 text-green-800">
+                    FINANCIAL
+                </span>
+            </div>
+            <div class="text-gray-600 mt-1">Rate: ${rate.rate}</div>
+            <div class="text-gray-500 mt-1">${rate.conditions || ''}</div>
+        `;
+        keyTermsContent.appendChild(div);
+    });
+}
 
-                // Key Provisions
-                document.getElementById('provisionsContent').innerHTML = 
-                    (data.analysis.key_provisions || []).map(provision => `
-                        <div class="bg-white shadow rounded-lg p-4">
-                            <div class="font-medium">${provision.title}</div>
-                            <div class="mt-2 p-3 bg-gray-50 rounded text-gray-600 text-sm">
-                                ${provision.text}
-                            </div>
-                            <div class="mt-2 text-blue-600 text-sm">${provision.significance}</div>
-                        </div>
-                    `).join('') || '<p class="text-gray-500">No key provisions identified</p>';
+// Important Dates
+const datesContent = document.getElementById('datesContent');
+datesContent.innerHTML = '';
+if (data.key_dates?.document_dates) {
+    data.key_dates.document_dates.forEach(date => {
+        const div = document.createElement('div');
+        div.className = 'bg-white shadow rounded-lg p-4';
+        div.innerHTML = `
+            <div class="flex justify-between items-start">
+                <div class="font-medium">${date.event}</div>
+                <span class="text-xs px-2 py-1 rounded ${getCategoryColor(date.significance)}">
+                    ${date.significance}
+                </span>
+            </div>
+            <div class="text-gray-600 mt-1">${date.date}</div>
+            <div class="text-sm mt-1">${date.details}</div>
+        `;
+        datesContent.appendChild(div);
+    });
+}
 
-                // Risks
-                document.getElementById('risksContent').innerHTML = 
-                    (data.analysis.risks || []).map(risk => `
-                        <div class="bg-white shadow rounded-lg p-4">
-                            <div class="flex justify-between items-start">
-                                <div class="font-medium">${risk.risk}</div>
-                                <span class="text-xs px-2 py-1 rounded ${getCategoryColor(risk.severity)}">
-                                    ${risk.severity}
-                                </span>
-                            </div>
-                            <div class="mt-2 p-3 bg-gray-50 rounded text-gray-600 text-sm">
-                                ${risk.basis}
-                            </div>
-                        </div>
-                    `).join('') || '<p class="text-gray-500">No risks identified</p>';
+// Key Provisions
+const provisionsContent = document.getElementById('clausesContent');
+provisionsContent.innerHTML = '';
+if (data.critical_provisions?.key_clauses) {
+    data.critical_provisions.key_clauses.forEach(clause => {
+        const div = document.createElement('div');
+        div.className = 'bg-white shadow rounded-lg p-4';
+        div.innerHTML = `
+            <div class="font-medium">${clause.title}</div>
+            <div class="text-gray-600 mt-2">${clause.content}</div>
+            <div class="text-blue-600 mt-2 text-sm">${clause.significance}</div>
+            ${clause.reference ? `<div class="text-gray-500 mt-1 text-sm">Section: ${clause.reference}</div>` : ''}
+        `;
+        provisionsContent.appendChild(div);
+    });
+}
 
-                resultsSection.classList.remove('hidden');
-            } catch (error) {
-                console.error('Analysis error:', error);
-                alert('Error analyzing document: ' + error.message);
-            } finally {
-                showLoading(false);
-            }
-        });
+// Risks
+const risksContent = document.getElementById('risksContent');
+risksContent.innerHTML = '';
+let allRisks = [
+    ...(data.risk_analysis?.financial_risks || []).map(r => ({...r, type: 'Financial'})),
+    ...(data.risk_analysis?.legal_risks || []).map(r => ({...r, type: 'Legal'})),
+    ...(data.risk_analysis?.operational_risks || []).map(r => ({...r, type: 'Operational'}))
+];
+
+allRisks.forEach(risk => {
+    const div = document.createElement('div');
+    div.className = 'bg-white shadow rounded-lg p-4';
+    div.innerHTML = `
+        <div class="flex justify-between items-start">
+            <div class="font-medium">${risk.risk}</div>
+            <div class="flex space-x-2">
+                <span class="text-xs px-2 py-1 rounded ${getCategoryColor(risk.severity)}">
+                    ${risk.severity}
+                </span>
+                <span class="text-xs px-2 py-1 rounded bg-gray-100">
+                    ${risk.type}
+                </span>
+            </div>
+        </div>
+        <div class="text-gray-600 mt-2">${risk.source_clause || risk.mitigation_measures || ''}</div>
+    `;
+    risksContent.appendChild(div);
+});
 
         // Q&A Functionality
         const questionForm = document.getElementById('questionForm');
