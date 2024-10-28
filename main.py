@@ -92,6 +92,7 @@ Analyze this document:
     return base_prompt + text
 
 @app.post("/analyze")
+@app.post("/analyze")
 async def analyze_document(file: UploadFile = File(...)):
     try:
         contents = await file.read()
@@ -100,17 +101,24 @@ async def analyze_document(file: UploadFile = File(...)):
         
         for page_num in range(len(pdf_reader.pages)):
             page_text = pdf_reader.pages[page_num].extract_text()
-            extracted_text += f"\nPage {page_num + 1}:\n{page_text}"
+            extracted_text += f"\n{page_text}"
         
         logger.debug(f"Extracted {len(extracted_text)} characters from PDF")
         
+        # Create system message
+        system_message = """You are an expert legal document analyzer. Your task is to:
+1. Extract specific information from legal documents
+2. Quote relevant text directly
+3. Identify key terms, dates, and provisions
+4. Return analysis in valid JSON format
+5. Never include placeholders or template text in response
+6. Always use actual document content"""
+        
+        # Send request to OpenAI
         response = client.chat.completions.create(
             model="gpt-3.5-turbo-16k",
             messages=[
-                {
-                    "role": "system",
-                    "content": "You are an expert legal analyst. Extract and quote specific details from the document."
-                },
+                {"role": "system", "content": system_message},
                 {"role": "user", "content": create_analysis_prompt(extracted_text)}
             ],
             temperature=0.1,
@@ -118,11 +126,19 @@ async def analyze_document(file: UploadFile = File(...)):
         )
         
         response_text = response.choices[0].message.content
-        logger.debug(f"Received analysis response of {len(response_text)} characters")
+        logger.debug(f"Received analysis response")
         
         try:
-            parsed_response = json.loads(response_text)
+            # Try to clean and parse JSON
+            cleaned_response = response_text.strip()
+            if cleaned_response.startswith("```json"):
+                cleaned_response = cleaned_response[7:]
+            if cleaned_response.endswith("```"):
+                cleaned_response = cleaned_response[:-3]
+                
+            parsed_response = json.loads(cleaned_response)
             return JSONResponse(content=parsed_response)
+            
         except json.JSONDecodeError as e:
             logger.error(f"JSON parsing error: {e}")
             logger.error(f"Response text: {response_text}")
@@ -131,7 +147,6 @@ async def analyze_document(file: UploadFile = File(...)):
     except Exception as e:
         logger.error(f"Error during document analysis: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error analyzing document: {str(e)}")
-
 @app.post("/ask")
 async def ask_question(file: UploadFile = File(...), question: str = Form(...)):
     try:
