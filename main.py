@@ -22,6 +22,7 @@ app.add_middleware(
 )
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 def create_analysis_prompt(text: str) -> str:
     return """You are an expert legal document analyzer. Analyze this document and provide specific details with exact quotes and references.
 
@@ -88,7 +89,8 @@ REQUIREMENTS:
 
 Document text to analyze:
 {text}"""
-    @app.post("/analyze")
+
+@app.post("/analyze")
 async def analyze_document(file: UploadFile = File(...)):
     try:
         contents = await file.read()
