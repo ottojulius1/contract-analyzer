@@ -344,17 +344,19 @@ document.getElementById('risksCount').textContent =
                 `).join('');
 
                 // Important Dates
-                document.getElementById('datesContent').innerHTML = data.analysis.dates.map(date => `
-                    <div class="bg-white shadow rounded-lg p-4">
-                        <div class="flex justify-between items-start">
-                            <div class="font-medium">${date.event}</div>
-                            <span class="text-xs px-2 py-1 rounded ${getCategoryColor(date.importance)}">
-                                ${date.importance}
-                            </span>
-                        </div>
-                        <div class="text-gray-600 mt-1">${date.date}</div>
-                    </div>
-                `).join('');
+document.getElementById('datesContent').innerHTML = 
+    (data.analysis.dates_and_deadlines || []).map(date => `
+        <div class="bg-white shadow rounded-lg p-4">
+            <div class="flex justify-between items-start">
+                <div class="font-medium">${date.event}</div>
+                <span class="text-xs px-2 py-1 rounded ${getCategoryColor(date.significance)}">
+                    ${date.significance}
+                </span>
+            </div>
+            <div class="text-gray-600 mt-1">${date.date}</div>
+            <div class="text-sm mt-1">${date.details}</div>
+        </div>
+    `).join('') || 'No dates specified';
 
                 // Clauses
                 document.getElementById('clausesContent').innerHTML = data.analysis.clause_analysis.clauses.map(clause => `
