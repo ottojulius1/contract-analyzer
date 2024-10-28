@@ -116,7 +116,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <!-- Risks Tab Content -->
                         <div id="risks-tab" class="tab-content hidden">
                             <div class="mt-4">
@@ -142,6 +141,113 @@
                 </div>
             </div>
 
+            <!-- Document Comparison Section -->
+            <div id="compare-section" class="hidden">
+                <!-- Upload Section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Original Document -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3">Original Document</h3>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors duration-200" id="dropZone1">
+                            <input type="file" id="fileInput1" accept=".pdf" class="hidden">
+                            <label for="fileInput1" class="cursor-pointer block">
+                                <div class="text-gray-500">
+                                    <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                    </svg>
+                                    <p class="text-sm">Drop original PDF here or click to upload</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <!-- New Document -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3">New Document</h3>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors duration-200" id="dropZone2">
+                            <input type="file" id="fileInput2" accept=".pdf" class="hidden">
+                            <label for="fileInput2" class="cursor-pointer block">
+                                <div class="text-gray-500">
+                                    <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                    </svg>
+                                    <p class="text-sm">Drop new PDF here or click to upload</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="compareBtn" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg disabled:bg-gray-300 hover:bg-blue-600 transition-colors duration-200 mb-8" disabled>
+                    Compare Documents
+                </button>
+
+                <!-- Comparison Results Section -->
+                <div id="comparisonResults" class="hidden">
+                    <!-- Summary of Changes -->
+                    <div class="bg-blue-50 rounded-lg p-4 mb-6">
+                        <h2 class="text-xl font-semibold mb-2">Summary of Changes</h2>
+                        <div id="changesSummaryContent"></div>
+                        <div class="grid grid-cols-3 gap-4 mt-4">
+                            <div class="bg-white rounded p-3 text-center">
+                                <div class="text-sm text-gray-600">Additions</div>
+                                <div id="additionsCount" class="text-xl font-semibold text-green-600">0</div>
+                            </div>
+                            <div class="bg-white rounded p-3 text-center">
+                                <div class="text-sm text-gray-600">Deletions</div>
+                                <div id="deletionsCount" class="text-xl font-semibold text-red-600">0</div>
+                            </div>
+                            <div class="bg-white rounded p-3 text-center">
+                                <div class="text-sm text-gray-600">Modifications</div>
+                                <div id="modificationsCount" class="text-xl font-semibold text-yellow-600">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Tabs -->
+                    <div class="border-b border-gray-200 mb-6">
+                        <nav class="flex space-x-4" aria-label="Comparison Tabs">
+                            <button class="comparison-tab px-3 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600" data-tab="changes">
+                                Significant Changes
+                            </button>
+                            <button class="comparison-tab px-3 py-2 text-sm font-medium" data-tab="clauses">
+                                Clause Changes
+                            </button>
+                            <button class="comparison-tab px-3 py-2 text-sm font-medium" data-tab="risks">
+                                Risk Analysis
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Changes Tab -->
+                    <div id="changes-tab" class="comparison-content">
+                        <div class="space-y-4" id="significantChangesContent"></div>
+                    </div>
+
+                    <!-- Clauses Tab -->
+                    <div id="clauses-tab" class="comparison-content hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-3">Added Clauses</h3>
+                                <div id="addedClausesContent" class="space-y-2"></div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold mb-3">Removed Clauses</h3>
+                                <div id="removedClausesContent" class="space-y-2"></div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold mb-3">Modified Clauses</h3>
+                                <div id="modifiedClausesContent" class="space-y-2"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Risks Tab -->
+                    <div id="risks-tab" class="comparison-content hidden">
+                        <div id="comparisonRisksContent" class="space-y-4"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Loading State -->
             <div id="loadingState" class="hidden text-center py-8">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
@@ -149,27 +255,31 @@
             </div>
         </div>
     </div>
-
-    <!-- Script Section -->
     <script>
-        const BACKEND_URL = 'https://contract-analyzer-backend.onrender.com';  // Replace this with your actual backend URL
+        // Constants and State
+        const BACKEND_URL = 'https://contract-analyzer-backend.onrender.com';
+        let currentFile = null;
+        let comparisonFiles = {
+            original: null,
+            new: null
+        };
 
+        // DOM Elements
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
         const analyzeBtn = document.getElementById('analyzeBtn');
+        const compareBtn = document.getElementById('compareBtn');
         const loadingState = document.getElementById('loadingState');
         const loadingText = document.getElementById('loadingText');
         const resultsSection = document.getElementById('resultsSection');
-        let currentFile = null;
+        const comparisonResults = document.getElementById('comparisonResults');
+        const questionForm = document.getElementById('questionForm');
+        const questionInput = document.getElementById('questionInput');
+        const qaHistory = document.getElementById('qaHistory');
 
         // Debug logging function
         function logDebug(message, data = null) {
-            console.log(`[Debug] ${message}`, data || '');
-        }
-
-        function showLoading(show, text = 'Processing...') {
-            loadingState.classList.toggle('hidden', !show);
-            loadingText.textContent = text;
+            console.log([Debug] ${message}, data || '');
         }
 
         // File Upload Handling for Analysis
@@ -181,11 +291,12 @@
                 if (file.type === 'application/pdf') {
                     currentFile = file;
                     analyzeBtn.disabled = false;
-                    dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
+                    dropZone.querySelector('p').textContent = Selected: ${file.name};
                     logDebug('PDF file accepted');
                 } else {
                     alert('Please upload a PDF file');
                     fileInput.value = '';
+                    currentFile = null;
                     analyzeBtn.disabled = true;
                     dropZone.querySelector('p').textContent = 'Drop your PDF document here or click to upload';
                     logDebug('File rejected - not a PDF');
@@ -193,7 +304,6 @@
             }
         });
 
-        // Handle Drag and Drop events
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -210,20 +320,133 @@
             e.preventDefault();
             e.stopPropagation();
             dropZone.classList.remove('border-blue-500');
+            
+            logDebug('File drop event triggered');
             if (e.dataTransfer.files.length > 0) {
                 const file = e.dataTransfer.files[0];
+                logDebug('File dropped:', file.name);
                 if (file.type === 'application/pdf') {
                     currentFile = file;
                     analyzeBtn.disabled = false;
-                    dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
+                    dropZone.querySelector('p').textContent = Selected: ${file.name};
+                    logDebug('PDF file accepted');
                 } else {
                     alert('Please upload a PDF file');
                     currentFile = null;
                     analyzeBtn.disabled = true;
                     dropZone.querySelector('p').textContent = 'Drop your PDF document here or click to upload';
+                    logDebug('File rejected - not a PDF');
                 }
             }
         });
+
+        // Navigation and Tab Handling
+        document.querySelectorAll('.main-nav-button').forEach(button => {
+            button.addEventListener('click', () => {
+                logDebug('Main navigation clicked:', button.dataset.section);
+                document.querySelectorAll('.main-nav-button').forEach(b => {
+                    b.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
+                });
+                button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
+
+                const section = button.dataset.section;
+                document.getElementById('analyze-section').classList.toggle('hidden', section !== 'analyze');
+                document.getElementById('compare-section').classList.toggle('hidden', section !== 'compare');
+
+                resultsSection.classList.add('hidden');
+                comparisonResults.classList.add('hidden');
+            });
+        });
+
+        // Tab Handling
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                logDebug('Tab clicked:', button.dataset.tab);
+                document.querySelectorAll('.tab-button').forEach(b => {
+                    b.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
+                });
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                
+                button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
+                document.getElementById(${button.dataset.tab}-tab).classList.remove('hidden');
+            });
+        });
+
+        // Comparison Tab Handling
+        document.querySelectorAll('.comparison-tab').forEach(button => {
+            button.addEventListener('click', () => {
+                logDebug('Comparison tab clicked:', button.dataset.tab);
+                document.querySelectorAll('.comparison-tab').forEach(b => {
+                    b.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
+                });
+                document.querySelectorAll('.comparison-content').forEach(c => c.classList.add('hidden'));
+                
+                button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
+                document.getElementById(${button.dataset.tab}-tab).classList.remove('hidden');
+            });
+        });
+        // File Upload Handling for Comparison
+        ['1', '2'].forEach(num => {
+            const input = document.getElementById(fileInput${num});
+            const zone = document.getElementById(dropZone${num});
+            
+            input.addEventListener('change', (e) => {
+                logDebug(Comparison file ${num} input change event triggered);
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    handleComparisonFile(file, num);
+                }
+            });
+
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                zone.classList.add('border-blue-500');
+            });
+
+            zone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                zone.classList.remove('border-blue-500');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                zone.classList.remove('border-blue-500');
+                
+                logDebug(Comparison file ${num} drop event triggered);
+                if (e.dataTransfer.files.length > 0) {
+                    const file = e.dataTransfer.files[0];
+                    handleComparisonFile(file, num);
+                }
+            });
+        });
+
+        function handleComparisonFile(file, num) {
+            logDebug(Handling comparison file ${num}:, file.name);
+            if (file.type === 'application/pdf') {
+                if (num === '1') {
+                    comparisonFiles.original = file;
+                } else {
+                    comparisonFiles.new = file;
+                }
+                document.getElementById(dropZone${num}).querySelector('p').textContent = Selected: ${file.name};
+                compareBtn.disabled = !(comparisonFiles.original && comparisonFiles.new);
+                logDebug('Comparison PDF file accepted');
+            } else {
+                alert('Please upload a PDF file');
+                if (num === '1') {
+                    comparisonFiles.original = null;
+                } else {
+                    comparisonFiles.new = null;
+                }
+                document.getElementById(dropZone${num}).querySelector('p').textContent = 
+                    num === '1' ? 'Drop original PDF here or click to upload' : 'Drop new PDF here or click to upload';
+                compareBtn.disabled = true;
+                logDebug('Comparison file rejected - not a PDF');
+            }
+        }
 
         // Document Analysis
         analyzeBtn.addEventListener('click', async () => {
@@ -236,20 +459,20 @@
                 logDebug('Starting document analysis');
                 showLoading(true, 'Analyzing document...');
                 resultsSection.classList.add('hidden');
-
-                const response = await fetch(`${BACKEND_URL}/analyze`, {
+                
+                const response = await fetch(${BACKEND_URL}/analyze, {
                     method: 'POST',
                     body: formData
                 });
 
                 const data = await response.json();
-                console.log('Full analysis response:', data);  // Debug log to check the received data
-
+                logDebug('Analysis response received:', data);
+                
                 if (!response.ok) {
                     throw new Error(data.detail || JSON.stringify(data) || 'Analysis failed');
                 }
 
-                displayResults(data); // Call the displayResults function with the received data
+                displayResults(data);
                 resultsSection.classList.remove('hidden');
             } catch (error) {
                 console.error('Analysis error:', error);
@@ -259,15 +482,99 @@
             }
         });
 
-        // Function to display analysis results
+        // Document Comparison
+        compareBtn.addEventListener('click', async () => {
+            if (!comparisonFiles.original || !comparisonFiles.new) return;
+
+            const formData = new FormData();
+            formData.append('file1', comparisonFiles.original);
+            formData.append('file2', comparisonFiles.new);
+
+            try {
+                logDebug('Starting document comparison');
+                showLoading(true, 'Comparing documents...');
+                comparisonResults.classList.add('hidden');
+                
+                const response = await fetch(${BACKEND_URL}/compare, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                logDebug('Comparison response received:', data);
+                
+                if (!response.ok) {
+                    throw new Error(data.detail || JSON.stringify(data) || 'Comparison failed');
+                }
+
+                displayComparisonResults(data);
+                comparisonResults.classList.remove('hidden');
+            } catch (error) {
+                console.error('Comparison error:', error);
+                alert('Error comparing documents: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // Q&A Handling
+        questionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const question = questionInput.value.trim();
+            if (!question || !currentFile) return;
+
+            const formData = new FormData();
+            formData.append('file', currentFile);
+            formData.append('question', question);
+
+            try {
+                logDebug('Submitting question:', question);
+                const questionElement = addToQAHistory(question, 'Analyzing...');
+                showLoading(true, 'Getting answer...');
+
+                const response = await fetch(${BACKEND_URL}/ask, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                logDebug('Answer received:', data);
+                
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to get answer');
+                }
+
+                updateQAResponse(questionElement, data.answer);
+                questionInput.value = '';
+            } catch (error) {
+                console.error('Q&A error:', error);
+                alert('Error getting answer: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        });
+        // Helper Functions
+        function showLoading(show, text = 'Processing...') {
+            loadingState.classList.toggle('hidden', !show);
+            loadingText.textContent = text;
+        }
+
+        function getCategoryColor(category) {
+            const colors = {
+                'FINANCIAL': 'bg-green-100 text-green-800',
+                'LEGAL': 'bg-blue-100 text-blue-800',
+                'OPERATIONAL': 'bg-yellow-100 text-yellow-800',
+                'HIGH': 'bg-red-100 text-red-800',
+                'MEDIUM': 'bg-yellow-100 text-yellow-800',
+                'LOW': 'bg-blue-100 text-blue-800'
+            };
+            return colors[category] || 'bg-gray-100 text-gray-800';
+        }
+
         function displayResults(data) {
-            console.log("Received data:", data);  // Debugging: log the data received
-
+            logDebug('Displaying analysis results');
             const docType = data.document_type;
-            const analysis = data.analysis;
-
-            // Display document type
-            document.getElementById('documentTypeContent').innerHTML = `
+            const docTypeHtml = 
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
                         <span class="font-medium">Type:</span>
@@ -277,40 +584,195 @@
                         <span class="font-medium">Confidence:</span>
                         <span>${(docType.confidence * 100).toFixed(1)}%</span>
                     </div>
+                    <div>
+                        <span class="font-medium">Industry:</span>
+                        <span>${docType.industry || 'Not specified'}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium">Jurisdiction:</span>
+                        <span>${docType.jurisdiction || 'Not specified'}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium">Indicators:</span>
+                        <ul class="list-disc pl-4 mt-1">
+                            ${docType.indicators.map(i => <li class="text-sm">${i}</li>).join('')}
+                        </ul>
+                    </div>
                 </div>
-            `;
+            ;
+            document.getElementById('documentTypeContent').innerHTML = docTypeHtml;
 
+            const analysis = data.analysis;
+
+            // Display quick stats
+            const quickStatsHtml = 
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-3 bg-white rounded-lg shadow">
+                        <div class="text-sm text-gray-600">Key Terms</div>
+                        <div class="text-xl font-semibold">${analysis.key_terms?.length || 0}</div>
+                    </div>
+                    <div class="p-3 bg-white rounded-lg shadow">
+                        <div class="text-sm text-gray-600">Important Dates</div>
+                        <div class="text-xl font-semibold">${analysis.dates?.length || 0}</div>
+                    </div>
+                    <div class="p-3 bg-white rounded-lg shadow">
+                        <div class="text-sm text-gray-600">Risks Identified</div>
+                        <div class="text-xl font-semibold">${analysis.risks?.length || 0}</div>
+                    </div>
+                    <div class="p-3 bg-white rounded-lg shadow">
+                        <div class="text-sm text-gray-600">Clauses Analyzed</div>
+                        <div class="text-xl font-semibold">${analysis.clause_analysis?.clauses?.length || 0}</div>
+                    </div>
+                </div>
+            ;
+            document.getElementById('quickStatsContent').innerHTML = quickStatsHtml;
+
+            // Display summary
+            document.getElementById('summaryContent').textContent = analysis.summary;
+            
             // Display key terms
-            document.getElementById('keyTermsContent').innerHTML = analysis.key_terms?.map(term => `
+            const keyTermsHtml = analysis.key_terms?.map(term => 
                 <div class="bg-white shadow rounded-lg p-4">
-                    <div class="font-medium">${term.term}</div>
+                    <div class="flex justify-between items-start">
+                        <div class="font-medium">${term.term}</div>
+                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(term.category)}">
+                            ${term.category}
+                        </span>
+                    </div>
                     <div class="text-gray-600 mt-1">${term.value}</div>
                 </div>
-            `).join('') || '<p>No key terms found.</p>';
+            ).join('') || '';
+            document.getElementById('keyTermsContent').innerHTML = keyTermsHtml;
 
-            // Display important dates
-            document.getElementById('datesContent').innerHTML = analysis.dates?.map(date => `
+            // Display dates
+            const datesHtml = analysis.dates?.map(date => 
                 <div class="bg-white shadow rounded-lg p-4">
-                    <div class="font-medium">${date.event}</div>
+                    <div class="flex justify-between items-start">
+                        <div class="font-medium">${date.event}</div>
+                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(date.importance)}">
+                            ${date.importance}
+                        </span>
+                    </div>
                     <div class="text-gray-600 mt-1">${date.date}</div>
                 </div>
-            `).join('') || '<p>No important dates found.</p>';
+            ).join('') || '';
+            document.getElementById('datesContent').innerHTML = datesHtml;
 
             // Display risks
-            document.getElementById('risksContent').innerHTML = analysis.risks?.map(risk => `
+            const risksHtml = analysis.risks?.map(risk => 
                 <div class="bg-white shadow rounded-lg p-4">
-                    <div class="font-medium">${risk.description}</div>
-                    <div class="text-gray-600 mt-1">${risk.severity}</div>
+                    <div class="flex justify-between items-start">
+                        <div class="font-medium">${typeof risk === 'object' ? risk.description : risk}</div>
+                        ${typeof risk === 'object' && risk.severity ? 
+                            <span class="text-xs px-2 py-1 rounded ${getCategoryColor(risk.severity)}">
+                                ${risk.severity}
+                            </span>
+                         : ''}
+                    </div>
+                    ${typeof risk === 'object' && risk.category ? 
+                        <div class="text-sm text-gray-600 mt-1">Category: ${risk.category}</div>
+                     : ''}
                 </div>
-            `).join('') || '<p>No risks identified.</p>';
+            ).join('') || '';
+            document.getElementById('risksContent').innerHTML = risksHtml;
 
             // Display flags
-            document.getElementById('flagsContent').innerHTML = analysis.flags?.map(flag => `
+            const flagsHtml = analysis.flags?.map(flag => 
                 <div class="bg-white shadow rounded-lg p-4">
-                    <div class="font-medium">${flag.issue}</div>
+                    <div class="flex justify-between items-start">
+                        <div class="font-medium">${flag.issue}</div>
+                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(flag.severity)}">
+                            ${flag.severity}
+                        </span>
+                    </div>
                     <div class="text-gray-600 mt-1">${flag.recommendation}</div>
                 </div>
-            `).join('') || '<p>No flags identified.</p>';
+            ).join('') || '';
+            document.getElementById('flagsContent').innerHTML = flagsHtml;
+
+            resultsSection.classList.remove('hidden');
+        }
+
+        function displayComparisonResults(data) {
+            const comparison = data.comparison;
+            const ai_analysis = comparison.ai_analysis;
+
+            // Display summary
+            document.getElementById('changesSummaryContent').innerHTML = 
+                <p class="text-gray-700">${ai_analysis.summary_of_changes}</p>
+            ;
+
+            // Update counters
+            document.getElementById('additionsCount').textContent = comparison.diff_stats.additions;
+            document.getElementById('deletionsCount').textContent = comparison.diff_stats.deletions;
+            document.getElementById('modificationsCount').textContent = comparison.diff_stats.modifications;
+
+            // Display significant changes
+            const significantChangesHtml = ai_analysis.significant_changes.map(change => 
+                <div class="bg-white shadow rounded-lg p-4">
+                    <div class="flex justify-between items-start">
+                        <div class="font-medium">${change.section}</div>
+                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(change.impact)}">
+                            ${change.impact}
+                        </span>
+                    </div>
+                    <div class="text-gray-600 mt-1">${change.change}</div>
+                </div>
+            ).join('');
+            document.getElementById('significantChangesContent').innerHTML = significantChangesHtml;
+
+            // Display clause changes
+            document.getElementById('addedClausesContent').innerHTML = ai_analysis.added_clauses.map(clause => 
+                <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+                    ${clause}
+                </div>
+            ).join('');
+
+            document.getElementById('removedClausesContent').innerHTML = ai_analysis.removed_clauses.map(clause => 
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    ${clause}
+                </div>
+            ).join('');
+
+            document.getElementById('modifiedClausesContent').innerHTML = ai_analysis.modified_clauses.map(clause => 
+                <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg">
+                    <div class="font-medium">${clause.clause}</div>
+                    <div class="mt-2 space-y-1">
+                        <div class="text-sm">Original: ${clause.original}</div>
+                        <div class="text-sm">New: ${clause.new}</div>
+                    </div>
+                    <div class="mt-2 text-sm font-medium">Impact: ${clause.impact}</div>
+                </div>
+            ).join('');
+
+            // Display risk analysis
+            const risksHtml = ai_analysis.risk_analysis.map(risk => 
+                <div class="bg-white shadow rounded-lg p-4">
+                    <div class="flex justify-between items-start">
+                        <div class="font-medium">${risk.risk}</div>
+                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(risk.severity)}">
+                            ${risk.severity}
+                        </span>
+                    </div>
+                    <div class="text-gray-600 mt-2">${risk.recommendation}</div>
+                </div>
+            ).join('');
+            document.getElementById('comparisonRisksContent').innerHTML = risksHtml;
+        }
+
+        function addToQAHistory(question, answer) {
+            const qaElement = document.createElement('div');
+            qaElement.className = 'border rounded-lg p-4';
+            qaElement.innerHTML = 
+                <div class="font-medium">Q: ${question}</div>
+                <div class="text-gray-600 mt-2 answer">A: ${answer}</div>
+            ;
+            qaHistory.insertBefore(qaElement, qaHistory.firstChild);
+            return qaElement;
+        }
+
+        function updateQAResponse(element, answer) {
+            element.querySelector('.answer').textContent = A: ${answer};
         }
     </script>
 </body>
