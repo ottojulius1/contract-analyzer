@@ -303,11 +303,20 @@
                 const data = await response.json();
                 
                 // Document Type Information
-                document.getElementById('docType').textContent = data.document_type.type;
-                document.getElementById('docIndustry').textContent = data.document_type.industry;
-                document.getElementById('docJurisdiction').textContent = data.document_type.jurisdiction;
-                document.getElementById('docParties').innerHTML = 
-                    data.document_type.parties.map(party => `<li>${party}</li>`).join('');
+                // Document Type Information
+document.getElementById('docType').textContent = data.document_type.type;
+document.getElementById('docIndustry').textContent = data.document_type.category;
+document.getElementById('docJurisdiction').textContent = data.document_type.jurisdiction;
+
+// Updated parties display code
+const partiesList = document.getElementById('docParties');
+partiesList.innerHTML = '';
+for (const key in data.document_type.parties) {
+    const party = data.document_type.parties[key];
+    const li = document.createElement('li');
+    li.textContent = `${party.name} (${party.role})`;
+    partiesList.appendChild(li);
+}
 
                 // Quick Stats
                 document.getElementById('keyTermsCount').textContent = data.analysis.key_terms.length;
