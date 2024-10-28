@@ -576,7 +576,6 @@
             // Similar implementations for deadlines and periodic requirements...
         }
 
-        // Main Analysis Function
         analyzeBtn.addEventListener('click', async () => {
             if (!currentFile) return;
 
@@ -592,19 +591,27 @@
                     body: formData
                 });
 
+                const responseData = await response.json();
+
                 if (!response.ok) {
-                    throw new Error('Failed to analyze document');
+                    console.error('Server error:', responseData);
+                    throw new Error(responseData.detail || 'Failed to analyze document');
                 }
 
-                const data = await response.json();
-                
                 // Display results
-                displayMetadata(data.document_metadata);
-                displayExecutiveSummary(data.executive_summary);
-                displayRisks(data.risk_analysis);
-                displayActionItems(data.action_items);
-                // Add other display function calls...
-
+                if (responseData.document_metadata) {
+                    displayMetadata(responseData.document_metadata);
+                }
+                if (responseData.executive_summary) {
+                    displayExecutiveSummary(responseData.executive_summary);
+                }
+                if (responseData.risk_analysis) {
+                    displayRisks(responseData.risk_analysis);
+                }
+                if (responseData.action_items) {
+                    displayActionItems(responseData.action_items);
+                }
+                
                 resultsSection.classList.remove('hidden');
                 showSuccess('Document analysis completed successfully');
                 
