@@ -276,7 +276,7 @@
                     throw new Error(data.detail || JSON.stringify(data) || 'Analysis failed');
                 }
 
-                displayResults(data);
+                displayResults(data); // Call the displayResults function with the received data
                 resultsSection.classList.remove('hidden');
             } catch (error) {
                 console.error('Analysis error:', error);
@@ -288,7 +288,8 @@
 
         // Function to display analysis results
         function displayResults(data) {
-            console.log("Received data:", data);
+            console.log("Received data:", data);  // Debugging: log the data received
+
             const docType = data.document_type;
             const analysis = data.analysis;
 
