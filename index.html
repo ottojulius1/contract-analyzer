@@ -5,384 +5,185 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Legal Document Analyzer Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        legal: {
-                            50: '#f8fafc',
-                            100: '#f1f5f9',
-                            200: '#e2e8f0',
-                            300: '#cbd5e1',
-                            400: '#94a3b8',
-                            500: '#64748b',
-                            600: '#475569',
-                            700: '#334155',
-                            800: '#1e293b',
-                            900: '#0f172a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Add error handling utility -->
-    <script>
-        window.handleError = function(error) {
-            console.error('Error:', error);
-            let errorMessage = error.message;
-            if (error.response) {
-                try {
-                    const errorData = error.response.json();
-                    errorMessage = errorData.detail || errorMessage;
-                } catch (e) {
-                    errorMessage = error.response.statusText;
-                }
-            }
-            showError(errorMessage);
-        };
-
-        function showError(message) {
-            const errorAlert = document.getElementById('errorAlert');
-            const errorMessage = document.getElementById('errorMessage');
-            errorMessage.textContent = message;
-            errorAlert.classList.remove('hidden');
-            setTimeout(() => {
-                errorAlert.classList.add('hidden');
-            }, 5000);
-        }
-
-        function showSuccess(message) {
-            const successAlert = document.getElementById('successAlert');
-            const successMessage = document.getElementById('successMessage');
-            successMessage.textContent = message;
-            successAlert.classList.remove('hidden');
-            setTimeout(() => {
-                successAlert.classList.add('hidden');
-            }, 5000);
-        }
-    </script>
 </head>
 <body class="bg-gray-50">
-    <div class="min-h-screen">
-        <!-- Header -->
-        <header class="bg-white shadow">
-            <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center">
-                    <h1 class="text-3xl font-bold text-gray-900">Legal Document Analyzer Pro</h1>
-                    <div class="flex space-x-4">
-                        <button id="helpBtn" class="text-gray-600 hover:text-gray-900">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </button>
+    <div class="max-w-7xl mx-auto p-6">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-2xl font-bold mb-6">Legal Document Analyzer Pro</h1>
+            
+            <!-- Main Navigation -->
+            <div class="mb-6 border-b border-gray-200">
+                <nav class="flex space-x-4" aria-label="Main Navigation">
+                    <button class="main-nav-button px-3 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600" 
+                            data-section="analyze">
+                        Analyze Document
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Upload Section -->
+            <div id="analyze-section">
+                <div class="mb-8">
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors duration-200" 
+                         id="dropZone">
+                        <input type="file" id="fileInput" accept=".pdf" class="hidden">
+                        <label for="fileInput" class="cursor-pointer block">
+                            <div class="text-gray-500">
+                                <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                                <p class="text-sm">Drop your PDF document here or click to upload</p>
+                                <p class="text-xs text-gray-400 mt-2" id="fileSize"></p>
+                            </div>
+                        </label>
                     </div>
+                    <button id="analyzeBtn" 
+                            class="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded-lg disabled:bg-gray-300 hover:bg-blue-600 transition-colors duration-200" 
+                            disabled>
+                        Analyze Document
+                    </button>
                 </div>
-            </div>
-        </header>
 
-        <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-            <!-- Alerts -->
-            <div id="errorAlert" class="hidden mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                <strong class="font-bold">Error!</strong>
-                <span id="errorMessage" class="block sm:inline"></span>
-                <button class="absolute top-0 right-0 px-4 py-3" onclick="document.getElementById('errorAlert').classList.add('hidden')">
-                    <span class="sr-only">Close</span>
-                    <svg class="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-
-            <div id="successAlert" class="hidden mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-                <strong class="font-bold">Success!</strong>
-                <span id="successMessage" class="block sm:inline"></span>
-                <button class="absolute top-0 right-0 px-4 py-3" onclick="document.getElementById('successAlert').classList.add('hidden')">
-                    <span class="sr-only">Close</span>
-                    <svg class="h-6 w-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- File Upload Section -->
-            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-                <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors duration-200" 
-                     id="dropZone">
-                    <input type="file" id="fileInput" accept=".pdf" class="hidden">
-                    <label for="fileInput" class="cursor-pointer block">
-                        <div class="text-gray-500">
-                            <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                            </svg>
-                            <p class="text-sm" id="dropZoneText">Drop your legal document here or click to upload</p>
-                            <p class="text-xs text-gray-400 mt-2" id="fileSize"></p>
-                        </div>
-                    </label>
-                </div>
-                <button id="analyzeBtn" 
-                        class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg disabled:bg-gray-300 hover:bg-blue-700 transition-colors duration-200" 
-                        disabled>
-                    Analyze Document
-                </button>
-            </div>
-            <!-- Loading State -->
-            <div id="loadingState" class="hidden bg-white rounded-lg shadow-lg p-6">
-                <div class="flex flex-col items-center justify-center">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                <!-- Loading State -->
+                <div id="loadingState" class="hidden text-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
                     <p class="mt-4 text-gray-600" id="loadingText">Analyzing document...</p>
-                    <div class="mt-2 text-sm text-gray-500" id="loadingProgress"></div>
                 </div>
-            </div>
-
-            <!-- Analysis Results -->
-            <div id="resultsSection" class="hidden">
-                <!-- Document Metadata -->
-                <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-                    <h2 class="text-xl font-semibold mb-4">Document Information</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-4">
-                            <div>
-                                <span class="font-medium text-gray-700">Type:</span>
-                                <span id="docType" class="ml-2"></span>
-                            </div>
-                            <div>
-                                <span class="font-medium text-gray-700">Jurisdiction:</span>
-                                <span id="docJurisdiction" class="ml-2"></span>
-                            </div>
-                            <div>
-                                <span class="font-medium text-gray-700">Status:</span>
-                                <span id="docStatus" class="ml-2"></span>
+                <!-- Results Section -->
+                <div id="resultsSection" class="hidden">
+                    <!-- Document Info Header -->
+                    <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Document Type -->
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <h2 class="text-xl font-semibold mb-2">Document Information</h2>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium">Type:</span>
+                                    <span id="docType" class="px-2 py-1 bg-blue-100 text-blue-800 rounded"></span>
+                                </div>
+                                <div>
+                                    <span class="font-medium">Industry:</span>
+                                    <span id="docIndustry" class="ml-2"></span>
+                                </div>
+                                <div>
+                                    <span class="font-medium">Jurisdiction:</span>
+                                    <span id="docJurisdiction" class="ml-2"></span>
+                                </div>
+                                <div>
+                                    <span class="font-medium">Parties:</span>
+                                    <ul id="docParties" class="list-disc pl-5 mt-1 text-sm"></ul>
+                                </div>
                             </div>
                         </div>
-                        <div class="space-y-4">
-                            <div>
-                                <span class="font-medium text-gray-700">Authentication Status:</span>
-                                <span id="docAuthentication" class="ml-2"></span>
+                        <!-- Quick Stats -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h2 class="text-xl font-semibold mb-2">Quick Analysis</h2>
+                            <div class="grid grid-cols-2 gap-4" id="quickStatsContent">
+                                <div class="p-3 bg-white rounded-lg shadow">
+                                    <div class="text-sm text-gray-600">Key Terms</div>
+                                    <div class="text-xl font-semibold" id="keyTermsCount">0</div>
+                                </div>
+                                <div class="p-3 bg-white rounded-lg shadow">
+                                    <div class="text-sm text-gray-600">Important Dates</div>
+                                    <div class="text-xl font-semibold" id="datesCount">0</div>
+                                </div>
+                                <div class="p-3 bg-white rounded-lg shadow">
+                                    <div class="text-sm text-gray-600">Key Clauses</div>
+                                    <div class="text-xl font-semibold" id="clausesCount">0</div>
+                                </div>
+                                <div class="p-3 bg-white rounded-lg shadow">
+                                    <div class="text-sm text-gray-600">Risks Identified</div>
+                                    <div class="text-xl font-semibold" id="risksCount">0</div>
+                                </div>
                             </div>
-                            <div>
-                                <span class="font-medium text-gray-700">Document Level:</span>
-                                <span id="docLevel" class="ml-2"></span>
-                            </div>
-                            <div id="docDependencies"></div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Analysis Navigation -->
-                <div class="bg-white rounded-lg shadow-lg p-6">
-                    <nav class="flex flex-wrap gap-2" role="tablist">
-                        <button class="tab-button px-4 py-2 rounded-lg text-sm font-medium bg-blue-50 text-blue-700" 
-                                data-tab="executive-summary">
-                            Executive Summary
-                        </button>
-                        <button class="tab-button px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50" 
-                                data-tab="legal-framework">
-                            Legal Framework
-                        </button>
-                        <button class="tab-button px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50" 
-                                data-tab="risk-analysis">
-                            Risk Analysis
-                        </button>
-                        <button class="tab-button px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50" 
-                                data-tab="legal-elements">
-                            Legal Elements
-                        </button>
-                        <button class="tab-button px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50" 
-                                data-tab="action-items">
-                            Action Items
-                        </button>
-                        <button class="tab-button px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50" 
-                                data-tab="stakeholders">
-                            Stakeholders
-                        </button>
-                        <button class="tab-button px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50" 
-                                data-tab="document-integrity">
-                            Document Integrity
-                        </button>
-                        <button class="tab-button px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50" 
-                                data-tab="special-considerations">
-                            Special Considerations
-                        </button>
-                        <button class="tab-button px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50" 
-                                data-tab="qa">
-                            Q&A
-                        </button>
-                    </nav>
-
-                    <!-- Tab Contents -->
-                    <div class="mt-6">
-                        <!-- Executive Summary Tab -->
-                        <div id="executive-summary-tab" class="tab-content">
-                            <div class="space-y-6">
-                                <div class="bg-blue-50 rounded-lg p-4">
-                                    <h3 class="text-lg font-semibold mb-2">Purpose</h3>
-                                    <p id="docPurpose" class="text-gray-700"></p>
-                                </div>
-                                
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Key Points</h3>
-                                    <div id="keyPointsList" class="space-y-3"></div>
-                                </div>
-
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Material Terms</h3>
-                                    <div id="materialTermsList" class="space-y-3"></div>
-                                </div>
-
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Critical Elements</h3>
-                                    <div id="criticalElementsList" class="space-y-3"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Legal Framework Tab -->
-                        <div id="legal-framework-tab" class="tab-content hidden">
-                            <div class="space-y-6">
-                                <div class="bg-gray-50 rounded-lg p-4">
-                                    <h3 class="text-lg font-semibold mb-3">Governing Law Analysis</h3>
-                                    <div id="governingLawContent"></div>
-                                </div>
-                                
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Compliance Requirements</h3>
-                                    <div id="complianceRequirementsList" class="space-y-3"></div>
-                                </div>
-                            </div>
+                    <!-- Analysis Tabs -->
+                    <div class="mb-6">
+                        <div class="border-b border-gray-200">
+                            <nav class="flex space-x-4" aria-label="Tabs">
+                                <button class="tab-button px-3 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600" 
+                                        data-tab="overview">Overview</button>
+                                <button class="tab-button px-3 py-2 text-sm font-medium" 
+                                        data-tab="clauses">Clause Analysis</button>
+                                <button class="tab-button px-3 py-2 text-sm font-medium" 
+                                        data-tab="risks">Risks & Flags</button>
+                                <button class="tab-button px-3 py-2 text-sm font-medium" 
+                                        data-tab="qa">Q&A</button>
+                            </nav>
                         </div>
 
-                        <!-- Risk Analysis Tab -->
-                        <div id="risk-analysis-tab" class="tab-content hidden">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Legal Risks</h3>
-                                    <div id="legalRisksList" class="space-y-3"></div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Compliance Risks</h3>
-                                    <div id="complianceRisksList" class="space-y-3"></div>
-                                </div>
-                                <div class="md:col-span-2">
-                                    <h3 class="text-lg font-semibold mb-3">Operational Risks</h3>
-                                    <div id="operationalRisksList" class="space-y-3"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Legal Elements Tab -->
-                        <div id="legal-elements-tab" class="tab-content hidden">
-                            <div class="space-y-6">
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Key Provisions</h3>
-                                    <div id="keyProvisionsList" class="space-y-4"></div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Definitions</h3>
-                                    <div id="definitionsList" class="space-y-3"></div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Conditions</h3>
-                                    <div id="conditionsList" class="space-y-3"></div>
+                        <!-- Tab Contents -->
+                        <div class="mt-6">
+                            <!-- Overview Tab -->
+                            <div id="overview-tab" class="tab-content">
+                                <div class="space-y-6">
+                                    <div>
+                                        <h3 class="text-lg font-semibold mb-3">Summary</h3>
+                                        <div id="summaryContent" class="bg-gray-50 rounded-lg p-4"></div>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold mb-3">Key Terms</h3>
+                                        <div id="keyTermsContent" class="space-y-2"></div>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold mb-3">Important Dates</h3>
+                                        <div id="datesContent" class="space-y-2"></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Action Items Tab -->
-                        <div id="action-items-tab" class="tab-content hidden">
-                            <div class="space-y-6">
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Immediate Actions</h3>
-                                    <div id="immediateActionsList" class="space-y-3"></div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Upcoming Deadlines</h3>
-                                    <div id="deadlinesList" class="space-y-3"></div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Periodic Requirements</h3>
-                                    <div id="periodicRequirementsList" class="space-y-3"></div>
+                            <!-- Clause Analysis Tab -->
+                            <div id="clauses-tab" class="tab-content hidden">
+                                <div class="space-y-6">
+                                    <div>
+                                        <h3 class="text-lg font-semibold mb-3">Key Clauses</h3>
+                                        <div id="clausesContent" class="space-y-4"></div>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold mb-3">Missing Clauses</h3>
+                                        <div id="missingClausesContent" class="bg-yellow-50 rounded-lg p-4"></div>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold mb-3">Unusual Provisions</h3>
+                                        <div id="unusualProvisionsContent" class="bg-red-50 rounded-lg p-4"></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Stakeholders Tab -->
-                        <div id="stakeholders-tab" class="tab-content hidden">
-                            <div class="space-y-6">
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Parties</h3>
-                                    <div id="partiesList" class="space-y-4"></div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Approval Requirements</h3>
-                                    <div id="approvalRequirementsList" class="space-y-3"></div>
+                            <!-- Risks Tab -->
+                            <div id="risks-tab" class="tab-content hidden">
+                                <div class="mt-4">
+                                    <div id="risksContent" class="space-y-4"></div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Document Integrity Tab -->
-                        <div id="document-integrity-tab" class="tab-content hidden">
-                            <div class="space-y-6">
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Execution Status</h3>
-                                    <div id="executionStatusContent" class="bg-gray-50 rounded-lg p-4"></div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Completeness Check</h3>
-                                    <div id="completenessContent" class="bg-yellow-50 rounded-lg p-4"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Special Considerations Tab -->
-                        <div id="special-considerations-tab" class="tab-content hidden">
-                            <div class="space-y-6">
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Unique Elements</h3>
-                                    <div id="uniqueElementsList" class="space-y-3"></div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Jurisdiction-Specific Requirements</h3>
-                                    <div id="jurisdictionRequirementsList" class="space-y-3"></div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold mb-3">Industry-Specific Requirements</h3>
-                                    <div id="industryRequirementsList" class="space-y-3"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Q&A Tab -->
-                        <div id="qa-tab" class="tab-content hidden">
-                            <div class="space-y-4">
-                                <form id="questionForm" class="space-y-3">
-                                    <div class="flex flex-col space-y-2">
-                                        <label for="questionInput" class="text-sm font-medium text-gray-700">
-                                            Ask a question about the document
-                                        </label>
+                            <!-- Q&A Tab -->
+                            <div id="qa-tab" class="tab-content hidden">
+                                <div class="mt-4">
+                                    <form id="questionForm" class="flex space-x-2">
                                         <input type="text" 
                                                id="questionInput" 
-                                               class="border rounded-lg px-4 py-2" 
-                                               placeholder="Type your question here...">
-                                    </div>
-                                    <button type="submit" 
-                                            class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200">
-                                        Ask Question
-                                    </button>
-                                </form>
-                                <div id="qaHistory" class="space-y-4 mt-6"></div>
+                                               class="flex-1 border rounded-lg px-4 py-2" 
+                                               placeholder="Ask a question about the document...">
+                                        <button type="submit" 
+                                                class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
+                                            Ask
+                                        </button>
+                                    </form>
+                                    <div id="qaHistory" class="mt-4 space-y-4"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
     </div>
     <script>
-        const BACKEND_URL = 'https://contract-analyzer-backend.onrender.com';  // Update with your backend URL
+        const BACKEND_URL = 'https://contract-analyzer-backend.onrender.com';  // Update this with your backend URL
         
         // DOM Elements
         const fileInput = document.getElementById('fileInput');
@@ -390,12 +191,13 @@
         const analyzeBtn = document.getElementById('analyzeBtn');
         const loadingState = document.getElementById('loadingState');
         const resultsSection = document.getElementById('resultsSection');
-        const dropZoneText = document.getElementById('dropZoneText');
-        const fileSize = document.getElementById('fileSize');
-        
         let currentFile = null;
 
-        // Utility Functions
+        function showLoading(show, text = 'Processing...') {
+            loadingState.classList.toggle('hidden', !show);
+            document.getElementById('loadingText').textContent = text;
+        }
+
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
@@ -404,45 +206,35 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        function getStatusColor(status) {
+        function getCategoryColor(category) {
             const colors = {
+                'FINANCIAL': 'bg-green-100 text-green-800',
+                'LEGAL': 'bg-blue-100 text-blue-800',
+                'OPERATIONAL': 'bg-yellow-100 text-yellow-800',
                 'HIGH': 'bg-red-100 text-red-800',
                 'MEDIUM': 'bg-yellow-100 text-yellow-800',
                 'LOW': 'bg-blue-100 text-blue-800'
             };
-            return colors[status] || 'bg-gray-100 text-gray-800';
+            return colors[category] || 'bg-gray-100 text-gray-800';
         }
 
-        function showLoading(show, text = 'Analyzing document...') {
-            loadingState.classList.toggle('hidden', !show);
-            document.getElementById('loadingText').textContent = text;
-        }
-
-        // File Handling
-        function handleFile(file) {
-            if (file.type !== 'application/pdf') {
-                showError('Please upload a PDF file');
-                return false;
-            }
-            if (file.size > 10 * 1024 * 1024) {  // 10MB limit
-                showError('File size exceeds 10MB limit');
-                return false;
-            }
-            
-            currentFile = file;
-            dropZoneText.textContent = `Selected: ${file.name}`;
-            fileSize.textContent = `Size: ${formatFileSize(file.size)}`;
-            analyzeBtn.disabled = false;
-            return true;
-        }
-
-        // Event Listeners
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
-                handleFile(e.target.files[0]);
+                const file = e.target.files[0];
+                if (file.type === 'application/pdf') {
+                    currentFile = file;
+                    analyzeBtn.disabled = false;
+                    dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
+                    document.getElementById('fileSize').textContent = `Size: ${formatFileSize(file.size)}`;
+                } else {
+                    alert('Please upload a PDF file');
+                    fileInput.value = '';
+                    analyzeBtn.disabled = true;
+                }
             }
         });
 
+        // File Drop Handling
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -461,7 +253,15 @@
             dropZone.classList.remove('border-blue-500');
             
             if (e.dataTransfer.files.length > 0) {
-                handleFile(e.dataTransfer.files[0]);
+                const file = e.dataTransfer.files[0];
+                if (file.type === 'application/pdf') {
+                    currentFile = file;
+                    analyzeBtn.disabled = false;
+                    dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
+                    document.getElementById('fileSize').textContent = `Size: ${formatFileSize(file.size)}`;
+                } else {
+                    alert('Please upload a PDF file');
+                }
             }
         });
 
@@ -469,113 +269,18 @@
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', () => {
                 document.querySelectorAll('.tab-button').forEach(b => {
-                    b.classList.remove('bg-blue-50', 'text-blue-700');
-                    b.classList.add('text-gray-500');
+                    b.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
                 });
                 document.querySelectorAll('.tab-content').forEach(c => {
                     c.classList.add('hidden');
                 });
 
-                button.classList.remove('text-gray-500');
-                button.classList.add('bg-blue-50', 'text-blue-700');
+                button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
                 document.getElementById(`${button.dataset.tab}-tab`).classList.remove('hidden');
             });
         });
 
-        // Display Functions
-        function displayMetadata(metadata) {
-            document.getElementById('docType').textContent = `${metadata.primary_type} (${metadata.sub_type})`;
-            document.getElementById('docJurisdiction').textContent = metadata.jurisdiction;
-            document.getElementById('docStatus').textContent = metadata.status;
-            document.getElementById('docAuthentication').textContent = metadata.authentication.status;
-            document.getElementById('docLevel').textContent = metadata.hierarchy.document_level;
-            
-            if (metadata.hierarchy.dependencies.length > 0) {
-                document.getElementById('docDependencies').innerHTML = `
-                    <span class="font-medium text-gray-700">Dependencies:</span>
-                    <ul class="list-disc list-inside ml-2 text-sm">
-                        ${metadata.hierarchy.dependencies.map(dep => `<li>${dep}</li>`).join('')}
-                    </ul>
-                `;
-            }
-        }
-
-        function displayExecutiveSummary(summary) {
-            document.getElementById('docPurpose').textContent = summary.purpose;
-
-            document.getElementById('keyPointsList').innerHTML = summary.key_points.map(point => `
-                <div class="bg-white shadow rounded-lg p-4">
-                    <div class="flex justify-between items-start">
-                        <h4 class="font-medium">${point.topic}</h4>
-                        <span class="text-xs px-2 py-1 rounded ${getStatusColor(point.importance)}">
-                            ${point.importance}
-                        </span>
-                    </div>
-                    <p class="mt-2 text-gray-600">${point.details}</p>
-                </div>
-            `).join('');
-
-            document.getElementById('materialTermsList').innerHTML = summary.material_terms.map(term => `
-                <div class="bg-white shadow rounded-lg p-4">
-                    <h4 class="font-medium">${term.term}</h4>
-                    <p class="mt-2 text-gray-600">${term.explanation}</p>
-                    <p class="mt-2 text-sm text-blue-600">${term.implications}</p>
-                </div>
-            `).join('');
-
-            document.getElementById('criticalElementsList').innerHTML = summary.critical_elements.map(element => `
-                <div class="bg-white shadow rounded-lg p-4">
-                    <div class="flex justify-between items-start">
-                        <h4 class="font-medium">${element.element}</h4>
-                        <span class="text-xs px-2 py-1 rounded ${getStatusColor(element.urgency)}">
-                            ${element.urgency}
-                        </span>
-                    </div>
-                    <p class="mt-2 text-gray-600">${element.details}</p>
-                </div>
-            `).join('');
-        }
-
-        function displayRisks(risks) {
-            document.getElementById('legalRisksList').innerHTML = risks.legal_risks.map(risk => `
-                <div class="bg-white shadow rounded-lg p-4">
-                    <div class="flex justify-between items-start">
-                        <h4 class="font-medium">${risk.risk}</h4>
-                        <span class="text-xs px-2 py-1 rounded ${getStatusColor(risk.severity)}">
-                            ${risk.severity}
-                        </span>
-                    </div>
-                    <p class="mt-2 text-gray-600">${risk.impact}</p>
-                    <div class="mt-3 p-3 bg-blue-50 rounded-lg">
-                        <span class="font-medium">Mitigation:</span>
-                        <p class="mt-1 text-sm">${risk.mitigation}</p>
-                    </div>
-                </div>
-            `).join('');
-
-            // Similar implementations for compliance and operational risks...
-        }
-
-        function displayActionItems(actions) {
-            document.getElementById('immediateActionsList').innerHTML = actions.immediate_actions.map(action => `
-                <div class="bg-white shadow rounded-lg p-4">
-                    <div class="flex justify-between items-start">
-                        <h4 class="font-medium">${action.action}</h4>
-                        <div class="text-xs">
-                            <span class="px-2 py-1 rounded bg-red-100 text-red-800">Due: ${action.deadline}</span>
-                        </div>
-                    </div>
-                    <p class="mt-2 text-gray-600">${action.requirements}</p>
-                    <div class="mt-2 flex justify-between text-sm">
-                        <span class="text-blue-600">Responsible: ${action.responsible_party}</span>
-                        <span class="text-red-600">${action.consequences}</span>
-                    </div>
-                </div>
-            `).join('');
-
-            // Similar implementations for deadlines and periodic requirements...
-        }
-
+        // Document Analysis
         analyzeBtn.addEventListener('click', async () => {
             if (!currentFile) return;
 
@@ -591,33 +296,94 @@
                     body: formData
                 });
 
-                const responseData = await response.json();
-
                 if (!response.ok) {
-                    console.error('Server error:', responseData);
-                    throw new Error(responseData.detail || 'Failed to analyze document');
+                    throw new Error('Failed to analyze document');
                 }
 
-                // Display results
-                if (responseData.document_metadata) {
-                    displayMetadata(responseData.document_metadata);
-                }
-                if (responseData.executive_summary) {
-                    displayExecutiveSummary(responseData.executive_summary);
-                }
-                if (responseData.risk_analysis) {
-                    displayRisks(responseData.risk_analysis);
-                }
-                if (responseData.action_items) {
-                    displayActionItems(responseData.action_items);
-                }
+                const data = await response.json();
                 
+                // Document Type Information
+                document.getElementById('docType').textContent = data.document_type.type;
+                document.getElementById('docIndustry').textContent = data.document_type.industry;
+                document.getElementById('docJurisdiction').textContent = data.document_type.jurisdiction;
+                document.getElementById('docParties').innerHTML = 
+                    data.document_type.parties.map(party => `<li>${party}</li>`).join('');
+
+                // Quick Stats
+                document.getElementById('keyTermsCount').textContent = data.analysis.key_terms.length;
+                document.getElementById('datesCount').textContent = data.analysis.dates.length;
+                document.getElementById('clausesCount').textContent = data.analysis.clause_analysis.clauses.length;
+                document.getElementById('risksCount').textContent = data.analysis.risks.length;
+
+                // Summary
+                document.getElementById('summaryContent').textContent = data.analysis.summary;
+
+                // Key Terms
+                document.getElementById('keyTermsContent').innerHTML = data.analysis.key_terms.map(term => `
+                    <div class="bg-white shadow rounded-lg p-4">
+                        <div class="flex justify-between items-start">
+                            <div class="font-medium">${term.term}</div>
+                            <span class="text-xs px-2 py-1 rounded ${getCategoryColor(term.category)}">
+                                ${term.category}
+                            </span>
+                        </div>
+                        <div class="text-gray-600 mt-1">${term.value}</div>
+                    </div>
+                `).join('');
+
+                // Important Dates
+                document.getElementById('datesContent').innerHTML = data.analysis.dates.map(date => `
+                    <div class="bg-white shadow rounded-lg p-4">
+                        <div class="flex justify-between items-start">
+                            <div class="font-medium">${date.event}</div>
+                            <span class="text-xs px-2 py-1 rounded ${getCategoryColor(date.importance)}">
+                                ${date.importance}
+                            </span>
+                        </div>
+                        <div class="text-gray-600 mt-1">${date.date}</div>
+                    </div>
+                `).join('');
+
+                // Clauses
+                document.getElementById('clausesContent').innerHTML = data.analysis.clause_analysis.clauses.map(clause => `
+                    <div class="bg-white shadow rounded-lg p-4">
+                        <div class="font-medium">${clause.clause_name}</div>
+                        <div class="text-gray-600 mt-1">${clause.clause_text}</div>
+                        <div class="text-sm text-blue-600 mt-2">${clause.analysis}</div>
+                    </div>
+                `).join('');
+
+                // Missing Clauses
+                document.getElementById('missingClausesContent').innerHTML = 
+                    data.analysis.clause_analysis.missing_clauses.length > 0 
+                        ? data.analysis.clause_analysis.missing_clauses.map(clause => 
+                            `<div class="mb-2">${clause}</div>`).join('')
+                        : '<p>No missing clauses identified.</p>';
+
+                // Unusual Provisions
+                document.getElementById('unusualProvisionsContent').innerHTML = 
+                    data.analysis.clause_analysis.unusual_provisions.length > 0
+                        ? data.analysis.clause_analysis.unusual_provisions.map(provision => 
+                            `<div class="mb-2">${provision}</div>`).join('')
+                        : '<p>No unusual provisions identified.</p>';
+
+                // Risks
+                document.getElementById('risksContent').innerHTML = data.analysis.risks.map(risk => `
+                    <div class="bg-white shadow rounded-lg p-4">
+                        <div class="flex justify-between items-start">
+                            <div class="font-medium">${risk.risk}</div>
+                            <span class="text-xs px-2 py-1 rounded ${getCategoryColor(risk.severity)}">
+                                ${risk.severity}
+                            </span>
+                        </div>
+                        <div class="text-gray-600 mt-1">${risk.mitigation}</div>
+                    </div>
+                `).join('');
+
                 resultsSection.classList.remove('hidden');
-                showSuccess('Document analysis completed successfully');
-                
             } catch (error) {
                 console.error('Analysis error:', error);
-                showError(error.message || 'Error analyzing document');
+                alert('Error analyzing document: ' + error.message);
             } finally {
                 showLoading(false);
             }
@@ -664,7 +430,7 @@
 
             } catch (error) {
                 console.error('Q&A error:', error);
-                showError(error.message || 'Error getting answer');
+                alert('Error getting answer: ' + error.message);
             } finally {
                 showLoading(false);
             }
