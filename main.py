@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import openai
+from openai import OpenAI
 from typing import Dict
 import PyPDF2
 import io
@@ -22,11 +22,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ensure OpenAI API key is set
-if not os.getenv("OPENAI_API_KEY"):
-    raise ValueError("OPENAI_API_KEY environment variable is not set")
-
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Initialize OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def create_analysis_prompt(text: str) -> str:
     return """Please analyze this document and provide a structured response in the following JSON format:
@@ -93,8 +90,8 @@ async def analyze_document(file: UploadFile = File(...)):
         # Create analysis prompt
         prompt = create_analysis_prompt(extracted_text)
         
-        # Get OpenAI response
-        response = openai.ChatCompletion.create(
+        # Get OpenAI response using new API format
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a legal document analyzer. Provide analysis in the exact JSON format requested."},
@@ -103,7 +100,7 @@ async def analyze_document(file: UploadFile = File(...)):
             temperature=0.2
         )
         
-        response_text = response.choices[0].message['content']
+        response_text = response.choices[0].message.content
         logger.debug(f"OpenAI response received, length: {len(response_text)}")
         
         # Parse the response and ensure it's valid JSON
@@ -112,6 +109,7 @@ async def analyze_document(file: UploadFile = File(...)):
             return JSONResponse(content=parsed_response)
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse OpenAI response as JSON: {e}")
+            logger.error(f"Response text: {response_text}")
             raise HTTPException(status_code=500, detail="Failed to parse analysis results")
             
     except Exception as e:
@@ -129,7 +127,7 @@ async def ask_question(file: UploadFile = File(...), question: str = Form(...)):
         
         prompt = f"""Context: {extracted_text}\n\nQuestion: {question}\n\nPlease provide a clear and concise answer based on the document content."""
         
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that answers questions about documents accurately and concisely."},
@@ -138,7 +136,7 @@ async def ask_question(file: UploadFile = File(...), question: str = Form(...)):
             temperature=0.2
         )
         
-        response_text = response.choices[0].message['content']
+        response_text = response.choices[0].message.content
         return {"answer": response_text}
         
     except Exception as e:
