@@ -7,6 +7,9 @@ import io
 import os
 import json
 import logging
+import datetime
+import re
+from typing import Dict, List, Optional, Union
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -264,10 +267,10 @@ CRITICAL INSTRUCTIONS:
 Analyze this document and provide JSON matching this structure, populated with actual content from the document:
 
 """
-    return base_prompt + text
-@app.post("/analyze")
+    return base_prompt + text@app.post("/analyze")
 async def analyze_document(file: UploadFile = File(...)):
     try:
+        # Extract text from PDF
         contents = await file.read()
         pdf_reader = PyPDF2.PdfReader(io.BytesIO(contents))
         extracted_text = ""
@@ -278,48 +281,143 @@ async def analyze_document(file: UploadFile = File(...)):
         
         logger.debug(f"Extracted {len(extracted_text)} characters from PDF")
 
-        system_message = """You are an expert legal document analyzer. Your task is to:
-1. Extract specific information from legal documents
-2. Quote relevant text directly
-3. Identify key terms, dates, and provisions
-4. Return analysis in valid JSON format
-5. Never include placeholders or template text in response
-6. Always use actual document content
-7. Maintain proper JSON structure
-8. Include all monetary values and dates found"""
-        
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo-16k",
-            messages=[
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": create_analysis_prompt(extracted_text)}
-            ],
-            temperature=0.1,
-            max_tokens=4000
-        )
-        
-        response_text = response.choices[0].message.content
-        logger.debug(f"Received analysis response")
-        
+        # Create system message with specific instructions
+        system_message = """You are an expert legal document analyzer with deep expertise in:
+1. Contract and legal document structure
+2. Legal terminology and implications
+3. Risk assessment and compliance requirements
+4. Financial terms and fee structures
+5. Regulatory requirements and jurisdictional matters
+
+Your tasks:
+1. Extract and quote specific information from documents
+2. Identify all monetary values, dates, and deadlines
+3. Map relationships between provisions
+4. Identify both explicit and implicit risks
+5. Maintain proper JSON structure in response
+6. Never use placeholder text
+7. Use actual document quotes
+8. Provide section references
+9. Note any missing standard elements
+10. Highlight unusual provisions
+
+Format all monetary values consistently and include all dates found."""
+
+        # Make API request with enhanced error handling
         try:
-            # Clean and parse JSON response
-            cleaned_response = response_text.strip()
-            if cleaned_response.startswith("```json"):
-                cleaned_response = cleaned_response[7:]
-            if cleaned_response.endswith("```"):
-                cleaned_response = cleaned_response[:-3]
-                
-            parsed_response = json.loads(cleaned_response)
-            logger.debug("Successfully parsed JSON response")
-            return JSONResponse(content=parsed_response)
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo-16k",
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": create_analysis_prompt(extracted_text)}
+                ],
+                temperature=0.1,
+                max_tokens=4000
+            )
             
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON parsing error: {e}")
-            logger.error(f"Response text: {response_text}")
+            response_text = response.choices[0].message.content
+            logger.debug("Received response from OpenAI")
+            
+            # Clean and parse JSON response
+            try:
+                # Remove any markdown formatting if present
+                cleaned_response = response_text.strip()
+                if cleaned_response.startswith("```json"):
+                    cleaned_response = cleaned_response[7:]
+                if cleaned_response.endswith("```"):
+                    cleaned_response = cleaned_response[:-3]
+                
+                # Parse JSON
+                parsed_response = json.loads(cleaned_response)
+                
+                # Validate response structure
+                required_keys = [
+                    "document_metadata",
+                    "financial_structure",
+                    "key_dates",
+                    "critical_provisions",
+                    "risk_analysis",
+                    "compliance_requirements",
+                    "cross_references"
+                ]
+                
+                missing_keys = [key for key in required_keys if key not in parsed_response]
+                if missing_keys:
+                    logger.warning(f"Missing sections in response: {missing_keys}")
+                    # Initialize missing sections with empty structures
+                    for key in missing_keys:
+                        if key == "document_metadata":
+                            parsed_response[key] = {
+                                "type": {"primary": "Not specified", "category": "Not specified"},
+                                "jurisdiction": {"state": "Not specified"},
+                                "parties": {"primary_parties": [], "related_parties": []}
+                            }
+                        else:
+                            parsed_response[key] = {}
+
+                # Process dates to ensure consistent format
+                if "key_dates" in parsed_response:
+                    for date_category in parsed_response["key_dates"].values():
+                        if isinstance(date_category, list):
+                            for date_item in date_category:
+                                if "date" in date_item and date_item["date"] != "Not specified":
+                                    try:
+                                        # Attempt to standardize date format if needed
+                                        date_item["date"] = date_item["date"].strip()
+                                    except Exception as date_error:
+                                        logger.warning(f"Error processing date: {date_error}")
+
+                # Process monetary values for consistency
+                if "financial_structure" in parsed_response:
+                    def standardize_money(value):
+                        if isinstance(value, str) and value != "Not specified":
+                            # Remove any currency symbols and convert to standard format
+                            cleaned = ''.join(c for c in value if c.isdigit() or c in '.,')
+                            try:
+                                return f"${float(cleaned):,.2f}"
+                            except:
+                                return value
+                        return value
+
+                    # Process fee arrangements
+                    if "fee_arrangement" in parsed_response["financial_structure"]:
+                        fees = parsed_response["financial_structure"]["fee_arrangement"]
+                        if "base_rates" in fees:
+                            for rate in fees["base_rates"]:
+                                if "rate" in rate:
+                                    rate["rate"] = standardize_money(rate["rate"])
+
+                # Add processing timestamp
+                parsed_response["analysis_metadata"] = {
+                    "timestamp": datetime.datetime.now().isoformat(),
+                    "document_length": len(extracted_text),
+                    "analysis_version": "2.0"
+                }
+
+                logger.info("Successfully processed and validated response")
+                return JSONResponse(content=parsed_response)
+                
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON parsing error: {e}")
+                logger.error(f"Response text: {response_text}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to parse analysis results: {str(e)}"
+                )
+                
+        except Exception as api_error:
+            logger.error(f"OpenAI API error: {str(api_error)}")
             raise HTTPException(
                 status_code=500,
-                detail="Failed to parse analysis results. Please try again."
+                detail=f"Error getting analysis from AI: {str(api_error)}"
             )
+            
+    except Exception as e:
+        logger.error(f"Document processing error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing document: {str(e)}"
+        )
             
     except Exception as e:
         logger.error(f"Error during document analysis: {str(e)}")
