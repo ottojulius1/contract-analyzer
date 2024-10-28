@@ -323,6 +323,7 @@ Provide a comprehensive analysis that:
 8. Includes jurisdiction-specific considerations"""
 
 @app.post("/analyze")
+@app.post("/analyze")
 async def analyze_document(file: UploadFile = File(...)):
     try:
         # Read and extract text from PDF
@@ -340,36 +341,50 @@ async def analyze_document(file: UploadFile = File(...)):
         # Create analysis prompt
         prompt = create_analysis_prompt(extracted_text)
         
-        # Get OpenAI response with enhanced parameters
-        response = client.chat.completions.create(
-            model="gpt-4",  # Using GPT-4 for more sophisticated legal analysis
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are an expert legal analyst with comprehensive knowledge of all legal domains, jurisdictions, and document types. Provide detailed, professional-grade analysis with specific citations to document sections."
-                },
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.1,  # Lower temperature for more consistent, precise responses
-            max_tokens=4000,  # Increased for comprehensive analysis
-            presence_penalty=0.1,  # Slight penalty to prevent repetition
-            frequency_penalty=0.1  # Slight penalty to encourage diverse language
-        )
-        
-        response_text = response.choices[0].message.content
-        logger.debug(f"Received analysis response of {len(response_text)} characters")
-        
         try:
-            parsed_response = json.loads(response_text)
-            return JSONResponse(content=parsed_response)
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON parsing error: {e}")
-            logger.error(f"Response text: {response_text}")
-            raise HTTPException(status_code=500, detail="Failed to parse analysis results")
+            # Get OpenAI response with enhanced parameters
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo-16k",  # Changed to GPT-3.5-turbo-16k
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert legal analyst with comprehensive knowledge of all legal domains, jurisdictions, and document types. Provide detailed, professional-grade analysis with specific citations to document sections."
+                    },
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                max_tokens=4000,
+                presence_penalty=0.1,
+                frequency_penalty=0.1
+            )
+            
+            response_text = response.choices[0].message.content
+            logger.debug(f"Received analysis response of {len(response_text)} characters")
+            
+            try:
+                parsed_response = json.loads(response_text)
+                return JSONResponse(content=parsed_response)
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON parsing error: {e}")
+                logger.error(f"Response text: {response_text}")
+                raise HTTPException(
+                    status_code=500, 
+                    detail=f"Failed to parse analysis results: {str(e)}\nResponse: {response_text[:200]}..."
+                )
+                
+        except Exception as api_error:
+            logger.error(f"OpenAI API error: {str(api_error)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"OpenAI API error: {str(api_error)}"
+            )
             
     except Exception as e:
         logger.error(f"Error during document analysis: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error analyzing document: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error analyzing document: {str(e)}"
+        )
 
 @app.post("/ask")
 async def ask_question(file: UploadFile = File(...), question: str = Form(...)):
