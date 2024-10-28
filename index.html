@@ -318,12 +318,15 @@ for (const key in data.document_type.parties) {
     partiesList.appendChild(li);
 }
 
-                // Quick Stats
-                document.getElementById('keyTermsCount').textContent = data.analysis.key_terms.length;
-                document.getElementById('datesCount').textContent = data.analysis.dates.length;
-                document.getElementById('clausesCount').textContent = data.analysis.clause_analysis.clauses.length;
-                document.getElementById('risksCount').textContent = data.analysis.risks.length;
-
+// Quick Stats
+document.getElementById('keyTermsCount').textContent = 
+    (data.analysis.key_terms || []).length;
+document.getElementById('datesCount').textContent = 
+    (data.analysis.dates_and_deadlines || []).length;
+document.getElementById('clausesCount').textContent = 
+    (data.analysis.key_provisions || []).length;
+document.getElementById('risksCount').textContent = 
+    (data.analysis.risks || []).length;
                 // Summary
                 document.getElementById('summaryContent').textContent = data.analysis.summary;
 
