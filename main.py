@@ -24,73 +24,247 @@ app.add_middleware(
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def create_analysis_prompt(text: str) -> str:
-    base_prompt = """Analyze this legal document and provide a JSON response that MUST include actual content from the document, not template text.
+    base_prompt = """As an expert legal document analyzer, provide a comprehensive analysis in valid JSON format. Your analysis MUST extract actual text and details from the document.
 
 Required JSON Structure:
 {
-    "document_type": {
-        "type": "Exact document title/type from document",
-        "category": "Legal category from document (e.g., Family Law, Corporate)",
-        "jurisdiction": "Jurisdiction explicitly mentioned in document",
+    "document_metadata": {
+        "type": {
+            "primary": "QUOTE exact document title/heading",
+            "category": "QUOTE legal category (e.g., Family Law, Corporate Law)",
+            "sub_type": "QUOTE specific type (e.g., Retainer Agreement, Employment Contract)"
+        },
+        "jurisdiction": {
+            "state": "QUOTE state jurisdiction",
+            "specific_courts": "QUOTE any specific courts mentioned",
+            "governing_law": "QUOTE governing law provisions"
+        },
         "parties": {
-            "party1": {
-                "name": "First party's exact name from document",
-                "role": "First party's role from document"
-            },
-            "party2": {
-                "name": "Second party's exact name from document",
-                "role": "Second party's role from document"
+            "primary_parties": [
+                {
+                    "name": "QUOTE exact name",
+                    "role": "QUOTE role/designation",
+                    "type": "individual/entity",
+                    "address": "QUOTE if provided",
+                    "key_relationships": ["List any mentioned relationships"]
+                }
+            ],
+            "related_parties": [
+                {
+                    "name": "QUOTE name",
+                    "role": "QUOTE relationship to primary parties",
+                    "relevance": "QUOTE context of involvement"
+                }
+            ],
+            "hierarchy": {
+                "representing_party": "QUOTE who represents whom",
+                "opposing_parties": "QUOTE opposing parties",
+                "third_parties": "QUOTE any third parties"
             }
         },
-        "matter": "Specific case/matter reference from document"
+        "matter_details": {
+            "case_reference": "QUOTE case/matter reference",
+            "subject_matter": "QUOTE specific subject",
+            "scope": {
+                "included": ["LIST explicitly included items/services"],
+                "excluded": ["LIST explicitly excluded items/services"],
+                "conditional": ["LIST conditional services"]
+            }
+        }
     },
-    "analysis": {
-        "summary": "Detailed summary using actual document content with: 1) Document exact purpose, 2) Party names and roles, 3) All monetary values mentioned, 4) Important dates found, 5) Main obligations stated",
-        "key_terms": [
-            {
-                "term": "Term heading/name from document",
-                "content": "Exact quote of relevant text",
-                "value": "Monetary amount if mentioned",
-                "category": "FINANCIAL/LEGAL/OPERATIONAL"
+    "financial_structure": {
+        "fee_arrangement": {
+            "type": "QUOTE fee structure type",
+            "base_rates": [
+                {
+                    "person": "QUOTE name/role",
+                    "rate": "QUOTE exact rate",
+                    "unit": "QUOTE billing unit",
+                    "conditions": "QUOTE any conditions"
+                }
+            ],
+            "retainers": [
+                {
+                    "amount": "QUOTE amount",
+                    "type": "initial/replenishment/special",
+                    "trigger": "QUOTE when required",
+                    "terms": "QUOTE specific terms"
+                }
+            ],
+            "additional_costs": [
+                {
+                    "type": "QUOTE cost type",
+                    "amount": "QUOTE amount or rate",
+                    "conditions": "QUOTE when applicable"
+                }
+            ]
+        },
+        "payment_terms": {
+            "billing_cycle": "QUOTE billing frequency",
+            "payment_deadline": "QUOTE payment terms",
+            "late_payment_consequences": [
+                {
+                    "trigger": "QUOTE condition",
+                    "consequence": "QUOTE result"
+                }
+            ],
+            "interest_charges": {
+                "rate": "QUOTE rate",
+                "calculation_method": "QUOTE how calculated",
+                "trigger_conditions": "QUOTE when applies"
             }
-        ],
-        "dates_and_deadlines": [
+        }
+    },
+    "key_dates": {
+        "document_dates": [
             {
-                "date": "Actual date from document",
-                "event": "Event description from document",
+                "date": "QUOTE exact date",
+                "event": "QUOTE what happens",
                 "significance": "HIGH/MEDIUM/LOW",
-                "details": "Quote of relevant text"
+                "dependencies": ["List any dependent events"],
+                "deadline_type": "firm/flexible/statutory"
             }
         ],
-        "key_provisions": [
+        "recurring_deadlines": [
             {
-                "title": "Actual provision name from document",
-                "text": "Direct quote of provision text",
-                "significance": "Explanation using document content"
+                "frequency": "QUOTE how often",
+                "event": "QUOTE what happens",
+                "conditions": "QUOTE any conditions",
+                "importance": "HIGH/MEDIUM/LOW"
             }
         ],
-        "risks": [
+        "conditional_dates": [
             {
-                "risk": "Risk identified from document content",
+                "trigger_event": "QUOTE what triggers",
+                "deadline": "QUOTE timeframe",
+                "required_action": "QUOTE what must be done",
+                "consequences": "QUOTE what happens if missed"
+            }
+        ]
+    },
+    "critical_provisions": {
+        "core_obligations": [
+            {
+                "party": "QUOTE who",
+                "obligation": "QUOTE what must be done",
+                "conditions": "QUOTE any conditions",
+                "consequences": "QUOTE consequences of breach",
+                "reference": "QUOTE section reference"
+            }
+        ],
+        "key_clauses": [
+            {
+                "title": "QUOTE clause heading",
+                "content": "QUOTE exact clause text",
+                "significance": "QUOTE why important",
+                "related_clauses": ["List related sections"],
+                "reference": "QUOTE section reference"
+            }
+        ],
+        "termination_provisions": [
+            {
+                "party": "QUOTE who can terminate",
+                "grounds": "QUOTE valid reasons",
+                "process": "QUOTE required steps",
+                "consequences": "QUOTE what happens after",
+                "notice_required": "QUOTE notice requirements"
+            }
+        ]
+    },
+    "risk_analysis": {
+        "financial_risks": [
+            {
+                "risk": "QUOTE specific risk",
                 "severity": "HIGH/MEDIUM/LOW",
-                "basis": "Quote supporting this risk"
+                "likelihood": "HIGH/MEDIUM/LOW",
+                "trigger_conditions": "QUOTE what triggers this risk",
+                "mitigation_measures": "QUOTE any safeguards",
+                "source_clause": "QUOTE relevant text"
+            }
+        ],
+        "legal_risks": [
+            {
+                "risk": "QUOTE specific risk",
+                "category": "procedural/substantive/compliance",
+                "severity": "HIGH/MEDIUM/LOW",
+                "implications": "QUOTE potential consequences",
+                "mitigation_options": "QUOTE available remedies",
+                "source_clause": "QUOTE relevant text"
+            }
+        ],
+        "operational_risks": [
+            {
+                "risk": "QUOTE specific risk",
+                "context": "QUOTE situation where it applies",
+                "severity": "HIGH/MEDIUM/LOW",
+                "preventive_measures": "QUOTE prevention steps",
+                "source_clause": "QUOTE relevant text"
+            }
+        ]
+    },
+    "compliance_requirements": {
+        "mandatory_actions": [
+            {
+                "requirement": "QUOTE what must be done",
+                "deadline": "QUOTE when required",
+                "responsible_party": "QUOTE who must do it",
+                "verification_method": "QUOTE how verified",
+                "consequences": "QUOTE consequences of non-compliance"
+            }
+        ],
+        "prohibitions": [
+            {
+                "prohibited_action": "QUOTE what's prohibited",
+                "scope": "QUOTE extent of prohibition",
+                "exceptions": "QUOTE any exceptions",
+                "consequences": "QUOTE consequences of violation"
+            }
+        ],
+        "regulatory_requirements": [
+            {
+                "regulation": "QUOTE specific requirement",
+                "applicable_authority": "QUOTE governing body",
+                "compliance_steps": "QUOTE required actions",
+                "verification": "QUOTE how compliance is verified"
+            }
+        ]
+    },
+    "cross_references": {
+        "internal_references": [
+            {
+                "from_section": "QUOTE source section",
+                "to_section": "QUOTE referenced section",
+                "context": "QUOTE why referenced",
+                "significance": "QUOTE importance of connection"
+            }
+        ],
+        "external_references": [
+            {
+                "type": "statute/regulation/case law",
+                "reference": "QUOTE specific reference",
+                "context": "QUOTE how it applies",
+                "significance": "QUOTE why important"
             }
         ]
     }
 }
 
-CRITICAL REQUIREMENTS:
-1. Use ONLY content found in the document
-2. Include ALL monetary values mentioned
-3. Include ALL dates and deadlines found
-4. Quote specific sections when possible
-5. NEVER use placeholder or template text
-6. Use "Not specified" for truly missing information
+CRITICAL INSTRUCTIONS:
+1. Every quoted field must contain ACTUAL TEXT from the document
+2. Use "Not specified" only when information is truly absent
+3. Include ALL monetary values found
+4. Include ALL dates and deadlines
+5. Include ALL named parties and their roles
+6. Maintain relationships between connected provisions
+7. Identify all risks, both explicit and implicit
+8. Note any missing standard provisions
+9. Highlight unusual or non-standard terms
+10. Include specific section references whenever possible
 
-Document to analyze:
+Analyze this document and provide JSON matching this structure, populated with actual content from the document:
+
 """
     return base_prompt + text
-
 @app.post("/analyze")
 async def analyze_document(file: UploadFile = File(...)):
     try:
