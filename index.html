@@ -5,175 +5,182 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Legal Document Analyzer Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .content-box {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
     <div class="max-w-7xl mx-auto p-6">
         <div class="bg-white rounded-lg shadow-lg p-6">
             <h1 class="text-2xl font-bold mb-6">Legal Document Analyzer Pro</h1>
             
-            <!-- Main Navigation -->
-            <div class="mb-6 border-b border-gray-200">
-                <nav class="flex space-x-4" aria-label="Main Navigation">
-                    <button class="main-nav-button px-3 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600" 
-                            data-section="analyze">
-                        Analyze Document
-                    </button>
-                </nav>
+            <!-- Upload Section -->
+            <div class="mb-8">
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors duration-200" 
+                     id="dropZone">
+                    <input type="file" id="fileInput" accept=".pdf" class="hidden">
+                    <label for="fileInput" class="cursor-pointer block">
+                        <div class="text-gray-500">
+                            <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                            <p class="text-sm">Drop your legal document here or click to upload</p>
+                            <p class="text-xs text-gray-400 mt-2" id="fileSize"></p>
+                        </div>
+                    </label>
+                </div>
+                <button id="analyzeBtn" 
+                        class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg disabled:bg-gray-300 hover:bg-blue-700 transition-colors duration-200" 
+                        disabled>
+                    Analyze Document
+                </button>
             </div>
 
-            <!-- Upload Section -->
-            <div id="analyze-section">
-                <div class="mb-8">
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors duration-200" 
-                         id="dropZone">
-                        <input type="file" id="fileInput" accept=".pdf" class="hidden">
-                        <label for="fileInput" class="cursor-pointer block">
-                            <div class="text-gray-500">
-                                <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                                </svg>
-                                <p class="text-sm">Drop your PDF document here or click to upload</p>
-                                <p class="text-xs text-gray-400 mt-2" id="fileSize"></p>
-                            </div>
-                        </label>
-                    </div>
-                    <button id="analyzeBtn" 
-                            class="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded-lg disabled:bg-gray-300 hover:bg-blue-600 transition-colors duration-200" 
-                            disabled>
-                        Analyze Document
-                    </button>
-                </div>
+            <!-- Loading State -->
+            <div id="loadingState" class="hidden text-center py-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                <p class="mt-4 text-gray-600" id="loadingText">Analyzing document...</p>
+            </div>
 
-                <!-- Loading State -->
-                <div id="loadingState" class="hidden text-center py-8">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                    <p class="mt-4 text-gray-600" id="loadingText">Analyzing document...</p>
-                </div>
-                <!-- Results Section -->
-                <div id="resultsSection" class="hidden">
-                    <!-- Document Info Header -->
-                    <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Document Type -->
-                        <div class="bg-blue-50 rounded-lg p-4">
-                            <h2 class="text-xl font-semibold mb-2">Document Information</h2>
-                            <div class="space-y-2">
-                                <div class="flex items-center justify-between">
-                                    <span class="font-medium">Type:</span>
-                                    <span id="docType" class="px-2 py-1 bg-blue-100 text-blue-800 rounded"></span>
-                                </div>
-                                <div>
-                                    <span class="font-medium">Industry:</span>
-                                    <span id="docIndustry" class="ml-2"></span>
-                                </div>
-                                <div>
-                                    <span class="font-medium">Jurisdiction:</span>
-                                    <span id="docJurisdiction" class="ml-2"></span>
-                                </div>
-                                <div>
-                                    <span class="font-medium">Parties:</span>
-                                    <ul id="docParties" class="list-disc pl-5 mt-1 text-sm"></ul>
-                                </div>
+            <!-- Results Section -->
+            <div id="resultsSection" class="hidden">
+                <!-- Document Info Header -->
+                <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Document Type -->
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <h2 class="text-xl font-semibold mb-2">Document Information</h2>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium">Type:</span>
+                                <span id="docType" class="px-2 py-1 bg-blue-100 text-blue-800 rounded"></span>
                             </div>
-                        </div>
-                        <!-- Quick Stats -->
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h2 class="text-xl font-semibold mb-2">Quick Analysis</h2>
-                            <div class="grid grid-cols-2 gap-4" id="quickStatsContent">
-                                <div class="p-3 bg-white rounded-lg shadow">
-                                    <div class="text-sm text-gray-600">Key Terms</div>
-                                    <div class="text-xl font-semibold" id="keyTermsCount">0</div>
-                                </div>
-                                <div class="p-3 bg-white rounded-lg shadow">
-                                    <div class="text-sm text-gray-600">Important Dates</div>
-                                    <div class="text-xl font-semibold" id="datesCount">0</div>
-                                </div>
-                                <div class="p-3 bg-white rounded-lg shadow">
-                                    <div class="text-sm text-gray-600">Key Clauses</div>
-                                    <div class="text-xl font-semibold" id="clausesCount">0</div>
-                                </div>
-                                <div class="p-3 bg-white rounded-lg shadow">
-                                    <div class="text-sm text-gray-600">Risks Identified</div>
-                                    <div class="text-xl font-semibold" id="risksCount">0</div>
-                                </div>
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium">Category:</span>
+                                <span id="docCategory"></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium">Jurisdiction:</span>
+                                <span id="docJurisdiction"></span>
+                            </div>
+                            <div>
+                                <span class="font-medium">Matter:</span>
+                                <span id="docMatter" class="block mt-1 text-sm"></span>
+                            </div>
+                            <div>
+                                <span class="font-medium">Parties:</span>
+                                <div id="docParties" class="mt-2 space-y-1"></div>
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h2 class="text-xl font-semibold mb-2">Quick Analysis</h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-3 bg-white rounded-lg shadow">
+                                <div class="text-sm text-gray-600">Key Terms</div>
+                                <div class="text-xl font-semibold" id="keyTermsCount">0</div>
+                            </div>
+                            <div class="p-3 bg-white rounded-lg shadow">
+                                <div class="text-sm text-gray-600">Important Dates</div>
+                                <div class="text-xl font-semibold" id="datesCount">0</div>
+                            </div>
+                            <div class="p-3 bg-white rounded-lg shadow">
+                                <div class="text-sm text-gray-600">Key Provisions</div>
+                                <div class="text-xl font-semibold" id="provisionsCount">0</div>
+                            </div>
+                            <div class="p-3 bg-white rounded-lg shadow">
+                                <div class="text-sm text-gray-600">Risks Identified</div>
+                                <div class="text-xl font-semibold" id="risksCount">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Analysis Tabs -->
+                <div class="mb-6">
+                    <div class="border-b border-gray-200">
+                        <nav class="flex space-x-4" aria-label="Tabs">
+                            <button class="tab-button px-3 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600" 
+                                    data-tab="overview">Overview</button>
+                            <button class="tab-button px-3 py-2 text-sm font-medium" 
+                                    data-tab="clauses">Key Provisions</button>
+                            <button class="tab-button px-3 py-2 text-sm font-medium" 
+                                    data-tab="risks">Risks</button>
+                            <button class="tab-button px-3 py-2 text-sm font-medium" 
+                                    data-tab="qa">Q&A</button>
+                        </nav>
+                    </div>
 
-                    <!-- Analysis Tabs -->
-                    <div class="mb-6">
-                        <div class="border-b border-gray-200">
-                            <nav class="flex space-x-4" aria-label="Tabs">
-                                <button class="tab-button px-3 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600" 
-                                        data-tab="overview">Overview</button>
-                                <button class="tab-button px-3 py-2 text-sm font-medium" 
-                                        data-tab="clauses">Clause Analysis</button>
-                                <button class="tab-button px-3 py-2 text-sm font-medium" 
-                                        data-tab="risks">Risks & Flags</button>
-                                <button class="tab-button px-3 py-2 text-sm font-medium" 
-                                        data-tab="qa">Q&A</button>
-                            </nav>
+                    <!-- Tab Contents -->
+                    <div class="mt-6">
+                        <!-- Overview Tab -->
+                        <div id="overview-tab" class="tab-content">
+                            <div class="space-y-6">
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-3">Document Summary</h3>
+                                    <div id="summaryContent" class="bg-gray-50 rounded-lg p-4"></div>
+                                </div>
+                                
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-3">Key Terms</h3>
+                                    <div id="keyTermsContent" class="space-y-3 content-box"></div>
+                                </div>
+                                
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-3">Important Dates & Deadlines</h3>
+                                    <div id="datesContent" class="space-y-3 content-box"></div>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Tab Contents -->
-                        <div class="mt-6">
-                            <!-- Overview Tab -->
-                            <div id="overview-tab" class="tab-content">
-                                <div class="space-y-6">
-                                    <div>
-                                        <h3 class="text-lg font-semibold mb-3">Summary</h3>
-                                        <div id="summaryContent" class="bg-gray-50 rounded-lg p-4"></div>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-lg font-semibold mb-3">Key Terms</h3>
-                                        <div id="keyTermsContent" class="space-y-2"></div>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-lg font-semibold mb-3">Important Dates</h3>
-                                        <div id="datesContent" class="space-y-2"></div>
+                        <!-- Key Provisions Tab -->
+                        <div id="clauses-tab" class="tab-content hidden">
+                            <div class="space-y-6">
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-3">Key Provisions</h3>
+                                    <div id="provisionsContent" class="space-y-4 content-box">
+                                        <!-- Content will be dynamically inserted here -->
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Clause Analysis Tab -->
-                            <div id="clauses-tab" class="tab-content hidden">
-                                <div class="space-y-6">
-                                    <div>
-                                        <h3 class="text-lg font-semibold mb-3">Key Clauses</h3>
-                                        <div id="clausesContent" class="space-y-4"></div>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-lg font-semibold mb-3">Missing Clauses</h3>
-                                        <div id="missingClausesContent" class="bg-yellow-50 rounded-lg p-4"></div>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-lg font-semibold mb-3">Unusual Provisions</h3>
-                                        <div id="unusualProvisionsContent" class="bg-red-50 rounded-lg p-4"></div>
-                                    </div>
+                        <!-- Risks Tab -->
+                        <div id="risks-tab" class="tab-content hidden">
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-semibold">Identified Risks</h3>
+                                <div id="risksContent" class="space-y-4 content-box">
+                                    <!-- Content will be dynamically inserted here -->
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Risks Tab -->
-                            <div id="risks-tab" class="tab-content hidden">
-                                <div class="mt-4">
-                                    <div id="risksContent" class="space-y-4"></div>
-                                </div>
-                            </div>
-
-                            <!-- Q&A Tab -->
-                            <div id="qa-tab" class="tab-content hidden">
-                                <div class="mt-4">
-                                    <form id="questionForm" class="flex space-x-2">
-                                        <input type="text" 
-                                               id="questionInput" 
-                                               class="flex-1 border rounded-lg px-4 py-2" 
-                                               placeholder="Ask a question about the document...">
-                                        <button type="submit" 
-                                                class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
-                                            Ask
-                                        </button>
-                                    </form>
-                                    <div id="qaHistory" class="mt-4 space-y-4"></div>
+                        <!-- Q&A Tab -->
+                        <div id="qa-tab" class="tab-content hidden">
+                            <div class="space-y-4">
+                                <form id="questionForm" class="mb-6">
+                                    <div class="flex flex-col space-y-2">
+                                        <label for="questionInput" class="text-sm font-medium text-gray-700">
+                                            Ask a question about the document
+                                        </label>
+                                        <div class="flex space-x-2">
+                                            <input type="text" 
+                                                   id="questionInput" 
+                                                   class="flex-1 border rounded-lg px-4 py-2" 
+                                                   placeholder="Example: What are the key obligations?">
+                                            <button type="submit" 
+                                                    class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200">
+                                                Ask
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div id="qaHistory" class="space-y-4 content-box">
+                                    <!-- Q&A history will be inserted here -->
                                 </div>
                             </div>
                         </div>
@@ -183,7 +190,7 @@
         </div>
     </div>
     <script>
-        const BACKEND_URL = 'https://contract-analyzer-backend.onrender.com';  // Update this with your backend URL
+        const BACKEND_URL = 'https://contract-analyzer-backend.onrender.com';  // Update with your backend URL
         
         // DOM Elements
         const fileInput = document.getElementById('fileInput');
@@ -218,6 +225,7 @@
             return colors[category] || 'bg-gray-100 text-gray-800';
         }
 
+        // File Input Handling
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 const file = e.target.files[0];
@@ -234,7 +242,7 @@
             }
         });
 
-        // File Drop Handling
+        // Drag and Drop Handling
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -302,97 +310,99 @@
 
                 const data = await response.json();
                 
-                // Document Type Information
-                // Document Type Information
-document.getElementById('docType').textContent = data.document_type.type;
-document.getElementById('docIndustry').textContent = data.document_type.category;
-document.getElementById('docJurisdiction').textContent = data.document_type.jurisdiction;
+                // Document Information
+                document.getElementById('docType').textContent = data.document_type.type;
+                document.getElementById('docCategory').textContent = data.document_type.category;
+                document.getElementById('docJurisdiction').textContent = data.document_type.jurisdiction;
+                document.getElementById('docMatter').textContent = data.document_type.matter;
 
-// Updated parties display code
-const partiesList = document.getElementById('docParties');
-partiesList.innerHTML = '';
-for (const key in data.document_type.parties) {
-    const party = data.document_type.parties[key];
-    const li = document.createElement('li');
-    li.textContent = `${party.name} (${party.role})`;
-    partiesList.appendChild(li);
-}
+                // Parties
+                const partiesContainer = document.getElementById('docParties');
+                partiesContainer.innerHTML = '';
+                for (const key in data.document_type.parties) {
+                    const party = data.document_type.parties[key];
+                    const div = document.createElement('div');
+                    div.className = 'text-sm p-2 bg-blue-50 rounded';
+                    div.textContent = `${party.name} (${party.role})`;
+                    partiesContainer.appendChild(div);
+                }
 
-// Quick Stats
-document.getElementById('keyTermsCount').textContent = 
-    (data.analysis.key_terms || []).length;
-document.getElementById('datesCount').textContent = 
-    (data.analysis.dates_and_deadlines || []).length;
-document.getElementById('clausesCount').textContent = 
-    (data.analysis.key_provisions || []).length;
-document.getElementById('risksCount').textContent = 
-    (data.analysis.risks || []).length;
+                // Quick Stats
+                document.getElementById('keyTermsCount').textContent = 
+                    (data.analysis.key_terms || []).length;
+                document.getElementById('datesCount').textContent = 
+                    (data.analysis.dates_and_deadlines || []).length;
+                document.getElementById('provisionsCount').textContent = 
+                    (data.analysis.key_provisions || []).length;
+                document.getElementById('risksCount').textContent = 
+                    (data.analysis.risks || []).length;
+
                 // Summary
                 document.getElementById('summaryContent').textContent = data.analysis.summary;
 
                 // Key Terms
-                document.getElementById('keyTermsContent').innerHTML = data.analysis.key_terms.map(term => `
-                    <div class="bg-white shadow rounded-lg p-4">
-                        <div class="flex justify-between items-start">
-                            <div class="font-medium">${term.term}</div>
-                            <span class="text-xs px-2 py-1 rounded ${getCategoryColor(term.category)}">
-                                ${term.category}
-                            </span>
+                document.getElementById('keyTermsContent').innerHTML = 
+                    (data.analysis.key_terms || []).map(term => `
+                        <div class="bg-white shadow rounded-lg p-4">
+                            <div class="flex justify-between items-start">
+                                <div class="font-medium">${term.term}</div>
+                                <span class="text-xs px-2 py-1 rounded ${getCategoryColor(term.category)}">
+                                    ${term.category}
+                                </span>
+                            </div>
+                            <div class="text-gray-600 mt-2">${term.content}</div>
+                            ${term.value ? `
+                                <div class="mt-2 text-green-600 font-medium">
+                                    Value: ${term.value}
+                                </div>
+                            ` : ''}
                         </div>
-                        <div class="text-gray-600 mt-1">${term.value}</div>
-                    </div>
-                `).join('');
+                    `).join('') || '<p class="text-gray-500">No key terms identified</p>';
 
-                // Important Dates
-document.getElementById('datesContent').innerHTML = 
-    (data.analysis.dates_and_deadlines || []).map(date => `
-        <div class="bg-white shadow rounded-lg p-4">
-            <div class="flex justify-between items-start">
-                <div class="font-medium">${date.event}</div>
-                <span class="text-xs px-2 py-1 rounded ${getCategoryColor(date.significance)}">
-                    ${date.significance}
-                </span>
-            </div>
-            <div class="text-gray-600 mt-1">${date.date}</div>
-            <div class="text-sm mt-1">${date.details}</div>
-        </div>
-    `).join('') || 'No dates specified';
+                // Dates
+                document.getElementById('datesContent').innerHTML = 
+                    (data.analysis.dates_and_deadlines || []).map(date => `
+                        <div class="bg-white shadow rounded-lg p-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="font-medium">${date.event}</div>
+                                    <div class="text-blue-600">${date.date}</div>
+                                </div>
+                                <span class="text-xs px-2 py-1 rounded ${getCategoryColor(date.significance)}">
+                                    ${date.significance}
+                                </span>
+                            </div>
+                            <div class="text-gray-600 mt-2">${date.details}</div>
+                        </div>
+                    `).join('') || '<p class="text-gray-500">No important dates identified</p>';
 
-                // Clauses
-                document.getElementById('clausesContent').innerHTML = data.analysis.clause_analysis.clauses.map(clause => `
-                    <div class="bg-white shadow rounded-lg p-4">
-                        <div class="font-medium">${clause.clause_name}</div>
-                        <div class="text-gray-600 mt-1">${clause.clause_text}</div>
-                        <div class="text-sm text-blue-600 mt-2">${clause.analysis}</div>
-                    </div>
-                `).join('');
-
-                // Missing Clauses
-                document.getElementById('missingClausesContent').innerHTML = 
-                    data.analysis.clause_analysis.missing_clauses.length > 0 
-                        ? data.analysis.clause_analysis.missing_clauses.map(clause => 
-                            `<div class="mb-2">${clause}</div>`).join('')
-                        : '<p>No missing clauses identified.</p>';
-
-                // Unusual Provisions
-                document.getElementById('unusualProvisionsContent').innerHTML = 
-                    data.analysis.clause_analysis.unusual_provisions.length > 0
-                        ? data.analysis.clause_analysis.unusual_provisions.map(provision => 
-                            `<div class="mb-2">${provision}</div>`).join('')
-                        : '<p>No unusual provisions identified.</p>';
+                // Key Provisions
+                document.getElementById('provisionsContent').innerHTML = 
+                    (data.analysis.key_provisions || []).map(provision => `
+                        <div class="bg-white shadow rounded-lg p-4">
+                            <div class="font-medium">${provision.title}</div>
+                            <div class="mt-2 p-3 bg-gray-50 rounded text-gray-600 text-sm">
+                                ${provision.text}
+                            </div>
+                            <div class="mt-2 text-blue-600 text-sm">${provision.significance}</div>
+                        </div>
+                    `).join('') || '<p class="text-gray-500">No key provisions identified</p>';
 
                 // Risks
-                document.getElementById('risksContent').innerHTML = data.analysis.risks.map(risk => `
-                    <div class="bg-white shadow rounded-lg p-4">
-                        <div class="flex justify-between items-start">
-                            <div class="font-medium">${risk.risk}</div>
-                            <span class="text-xs px-2 py-1 rounded ${getCategoryColor(risk.severity)}">
-                                ${risk.severity}
-                            </span>
+                document.getElementById('risksContent').innerHTML = 
+                    (data.analysis.risks || []).map(risk => `
+                        <div class="bg-white shadow rounded-lg p-4">
+                            <div class="flex justify-between items-start">
+                                <div class="font-medium">${risk.risk}</div>
+                                <span class="text-xs px-2 py-1 rounded ${getCategoryColor(risk.severity)}">
+                                    ${risk.severity}
+                                </span>
+                            </div>
+                            <div class="mt-2 p-3 bg-gray-50 rounded text-gray-600 text-sm">
+                                ${risk.basis}
+                            </div>
                         </div>
-                        <div class="text-gray-600 mt-1">${risk.mitigation}</div>
-                    </div>
-                `).join('');
+                    `).join('') || '<p class="text-gray-500">No risks identified</p>';
 
                 resultsSection.classList.remove('hidden');
             } catch (error) {
@@ -435,7 +445,7 @@ document.getElementById('datesContent').innerHTML =
                 qaElement.className = 'bg-white shadow rounded-lg p-4';
                 qaElement.innerHTML = `
                     <div class="font-medium text-blue-600 mb-2">Q: ${question}</div>
-                    <div class="text-gray-600">A: ${data.answer}</div>
+                    <div class="text-gray-600">${data.answer}</div>
                 `;
                 
                 const qaHistory = document.getElementById('qaHistory');
