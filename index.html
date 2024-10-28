@@ -270,7 +270,7 @@
                 });
 
                 const data = await response.json();
-                logDebug('Full analysis response:', data);  // Debug log to check the received data
+                console.log('Full analysis response:', data);  // Debug log to check the received data
 
                 if (!response.ok) {
                     throw new Error(data.detail || JSON.stringify(data) || 'Analysis failed');
