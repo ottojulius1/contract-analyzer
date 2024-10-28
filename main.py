@@ -24,74 +24,73 @@ app.add_middleware(
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def create_analysis_prompt(text: str) -> str:
-    base_prompt = """Analyze this legal document and provide a JSON response with the following structure:
+    base_prompt = """Analyze this legal document and provide a JSON response that MUST include actual content from the document, not template text.
+
+Required JSON Structure:
 {
     "document_type": {
-        "type": "[Document Type]",
-        "category": "[Legal Category]",
-        "jurisdiction": "[Jurisdiction]",
+        "type": "Exact document title/type from document",
+        "category": "Legal category from document (e.g., Family Law, Corporate)",
+        "jurisdiction": "Jurisdiction explicitly mentioned in document",
         "parties": {
             "party1": {
-                "name": "[Party Name]",
-                "role": "[Party Role]"
+                "name": "First party's exact name from document",
+                "role": "First party's role from document"
             },
             "party2": {
-                "name": "[Party Name]",
-                "role": "[Party Role]"
+                "name": "Second party's exact name from document",
+                "role": "Second party's role from document"
             }
         },
-        "matter": "[Matter/Case Reference]"
+        "matter": "Specific case/matter reference from document"
     },
     "analysis": {
-        "summary": "[Document Summary]",
+        "summary": "Detailed summary using actual document content with: 1) Document exact purpose, 2) Party names and roles, 3) All monetary values mentioned, 4) Important dates found, 5) Main obligations stated",
         "key_terms": [
             {
-                "term": "[Term Name]",
-                "content": "[Term Content]",
-                "value": "[Monetary Value if applicable]",
+                "term": "Term heading/name from document",
+                "content": "Exact quote of relevant text",
+                "value": "Monetary amount if mentioned",
                 "category": "FINANCIAL/LEGAL/OPERATIONAL"
             }
         ],
         "dates_and_deadlines": [
             {
-                "date": "[Date]",
-                "event": "[Event Description]",
+                "date": "Actual date from document",
+                "event": "Event description from document",
                 "significance": "HIGH/MEDIUM/LOW",
-                "details": "[Event Details]"
+                "details": "Quote of relevant text"
             }
         ],
         "key_provisions": [
             {
-                "title": "[Provision Title]",
-                "text": "[Provision Text]",
-                "significance": "[Significance]"
+                "title": "Actual provision name from document",
+                "text": "Direct quote of provision text",
+                "significance": "Explanation using document content"
             }
         ],
         "risks": [
             {
-                "risk": "[Risk Description]",
+                "risk": "Risk identified from document content",
                 "severity": "HIGH/MEDIUM/LOW",
-                "basis": "[Risk Basis]"
+                "basis": "Quote supporting this risk"
             }
         ]
     }
 }
 
-Instructions:
-1. Replace all text in [] with actual content from the document
-2. Use exact quotes for important text
-3. Include all monetary values found
-4. Include all dates and deadlines
-5. Reference specific sections
-6. Use only information from the document
-7. For any missing information, use "Not specified"
-8. Return only valid JSON
+CRITICAL REQUIREMENTS:
+1. Use ONLY content found in the document
+2. Include ALL monetary values mentioned
+3. Include ALL dates and deadlines found
+4. Quote specific sections when possible
+5. NEVER use placeholder or template text
+6. Use "Not specified" for truly missing information
 
-Analyze this document:
+Document to analyze:
 """
     return base_prompt + text
 
-@app.post("/analyze")
 @app.post("/analyze")
 async def analyze_document(file: UploadFile = File(...)):
     try:
@@ -101,20 +100,20 @@ async def analyze_document(file: UploadFile = File(...)):
         
         for page_num in range(len(pdf_reader.pages)):
             page_text = pdf_reader.pages[page_num].extract_text()
-            extracted_text += f"\n{page_text}"
+            extracted_text += f"\nPage {page_num + 1}:\n{page_text}"
         
         logger.debug(f"Extracted {len(extracted_text)} characters from PDF")
-        
-        # Create system message
+
         system_message = """You are an expert legal document analyzer. Your task is to:
 1. Extract specific information from legal documents
 2. Quote relevant text directly
 3. Identify key terms, dates, and provisions
 4. Return analysis in valid JSON format
 5. Never include placeholders or template text in response
-6. Always use actual document content"""
+6. Always use actual document content
+7. Maintain proper JSON structure
+8. Include all monetary values and dates found"""
         
-        # Send request to OpenAI
         response = client.chat.completions.create(
             model="gpt-3.5-turbo-16k",
             messages=[
@@ -129,7 +128,7 @@ async def analyze_document(file: UploadFile = File(...)):
         logger.debug(f"Received analysis response")
         
         try:
-            # Try to clean and parse JSON
+            # Clean and parse JSON response
             cleaned_response = response_text.strip()
             if cleaned_response.startswith("```json"):
                 cleaned_response = cleaned_response[7:]
@@ -137,16 +136,24 @@ async def analyze_document(file: UploadFile = File(...)):
                 cleaned_response = cleaned_response[:-3]
                 
             parsed_response = json.loads(cleaned_response)
+            logger.debug("Successfully parsed JSON response")
             return JSONResponse(content=parsed_response)
             
         except json.JSONDecodeError as e:
             logger.error(f"JSON parsing error: {e}")
             logger.error(f"Response text: {response_text}")
-            raise HTTPException(status_code=500, detail="Failed to parse analysis results")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to parse analysis results. Please try again."
+            )
             
     except Exception as e:
         logger.error(f"Error during document analysis: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error analyzing document: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error analyzing document: {str(e)}"
+        )
+
 @app.post("/ask")
 async def ask_question(file: UploadFile = File(...), question: str = Form(...)):
     try:
