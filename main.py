@@ -24,75 +24,129 @@ app.add_middleware(
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def create_analysis_prompt(text: str) -> str:
-    return """You are conducting a legal document analysis. You MUST:
-1. Extract and quote ACTUAL text from the document
-2. Use REAL names, dates, numbers, and terms found in the document
-3. DO NOT generate generic descriptions
-4. Every point must cite specific details from the document
+    return """You are an expert legal document analyzer. First identify the exact type of legal document, then provide a detailed analysis based on its actual content.
 
-Analyze this legal document and provide a structured response that includes ONLY ACTUAL content from the document:
+STEP 1: Document Classification
+First, identify the specific type of document (e.g., Retainer Agreement, Employment Contract, Settlement Agreement, Contract, Lease, etc.) and its key identifiers.
+
+STEP 2: Detailed Analysis
+Based on the identified document type, extract and analyze the following FROM THE ACTUAL DOCUMENT TEXT:
+
 {
     "document_type": {
-        "type": "[QUOTE exact title/heading of document]",
-        "industry": "[EXTRACT actual industry references from document]",
-        "jurisdiction": "[QUOTE jurisdiction clause or location references]",
-        "parties": [
-            "[LIST actual party names as written in document]"
-        ]
+        "type": "QUOTE the exact document title/type as written",
+        "category": "Legal category (e.g., Corporate, Family Law, Real Estate, etc.)",
+        "jurisdiction": "QUOTE any jurisdiction mentioned",
+        "parties": {
+            "party1": {
+                "name": "EXACT name as written",
+                "role": "Role as specified in document"
+            },
+            "party2": {
+                "name": "EXACT name as written",
+                "role": "Role as specified in document"
+            }
+        },
+        "matter": "QUOTE the specific matter or purpose",
+        "date": "QUOTE document date"
     },
     "analysis": {
-        "summary": "[EXTRACT KEY DETAILS ONLY: 1) Exact names of all parties 2) Specific service/employment/subject matter described 3) Actual monetary values and payment terms 4) Real dates and deadlines 5) Quote unique or important clauses. NO GENERIC DESCRIPTIONS.]",
+        "summary": "Write a SPECIFIC summary that includes:
+            1. Exact purpose of this document
+            2. Actual names of all parties
+            3. All monetary values mentioned
+            4. Key dates and deadlines
+            5. Main obligations
+            NO GENERIC DESCRIPTIONS - use actual details from document",
+        
         "key_terms": [
             {
-                "term": "[QUOTE section heading or key term]",
-                "value": "[QUOTE actual clause text defining this term]",
+                "term": "QUOTE the exact term/section heading",
+                "content": "QUOTE relevant text",
+                "value": "For monetary terms, QUOTE exact amounts",
                 "category": "FINANCIAL/LEGAL/OPERATIONAL",
-                "source": "[Reference section number or location]"
+                "location": "Section or page reference"
             }
         ],
-        "dates": [
+        
+        "monetary_provisions": [
             {
-                "date": "[QUOTE actual date from document]",
-                "event": "[DESCRIBE specific event using document language]",
-                "importance": "HIGH/MEDIUM/LOW",
-                "source": "[Reference section number or location]"
+                "type": "Type of payment/fee/amount",
+                "amount": "QUOTE exact amount",
+                "details": "QUOTE relevant text",
+                "location": "Section reference"
             }
         ],
-        "clause_analysis": {
-            "clauses": [
-                {
-                    "clause_name": "[QUOTE actual clause heading]",
-                    "clause_text": "[QUOTE exact clause text]",
-                    "analysis": "[Explain implications using specifics from the clause]",
-                    "location": "[Section number or location]"
-                }
+        
+        "dates_and_deadlines": [
+            {
+                "date": "QUOTE exact date",
+                "event": "QUOTE what happens on this date",
+                "significance": "HIGH/MEDIUM/LOW",
+                "details": "QUOTE relevant text"
+            }
+        ],
+        
+        "key_provisions": [
+            {
+                "title": "QUOTE section/provision title",
+                "text": "QUOTE actual provision text",
+                "significance": "Explain significance using details from document",
+                "location": "Section reference"
+            }
+        ],
+        
+        "obligations": {
+            "party1": [
+                "LIST specific obligations QUOTED from document"
             ],
-            "missing_clauses": [
-                "[List standard clauses that are actually missing, be specific]"
-            ],
-            "unusual_provisions": [
-                "[QUOTE any non-standard clauses found, with section references]"
+            "party2": [
+                "LIST specific obligations QUOTED from document"
             ]
         },
+        
+        "critical_terms": [
+            {
+                "term": "QUOTE important term",
+                "explanation": "Explain using ACTUAL document content",
+                "importance": "HIGH/MEDIUM/LOW"
+            }
+        ],
+        
+        "unusual_provisions": [
+            {
+                "provision": "QUOTE any unusual/notable provisions",
+                "analysis": "Explain why notable",
+                "location": "Section reference"
+            }
+        ],
+        
         "risks": [
             {
-                "risk": "[Describe specific risk based on actual clause content]",
+                "risk": "Identify specific risk based on document content",
                 "severity": "HIGH/MEDIUM/LOW",
-                "source": "[Quote relevant clause text]",
-                "mitigation": "[Specific mitigation based on document terms]"
+                "basis": "QUOTE relevant text",
+                "mitigation": "If mentioned in document, QUOTE mitigation measures"
             }
         ]
     }
 }
 
-IMPORTANT:
-- Every field must contain ACTUAL content from the document
-- Use quotes and section references
-- Do not generate generic text
-- If information isn't in the document, say "Not specified in document" rather than making assumptions
-- Focus on unique aspects of this specific document
+IMPORTANT RULES:
+1. NEVER make up or infer information
+2. ONLY use text actually present in the document
+3. Use "Not specified" if information isn't in the document
+4. QUOTE actual document text wherever possible
+5. Include section/page references
+6. Focus on what makes this specific document unique
+7. Adapt analysis based on document type
+8. If monetary values, dates, or specific terms exist, always include them
+9. Identify unusual or notable provisions
+10. Note any missing standard provisions for this type of document
 
-Document text to analyze:
+Remember: This tool will be used for ALL types of legal documents, so first identify the type, then provide appropriate analysis for that specific type of document.
+
+Document to analyze:
 {text}"""
 @app.post("/analyze")
 async def analyze_document(file: UploadFile = File(...)):
