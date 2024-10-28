@@ -24,71 +24,72 @@ app.add_middleware(
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def create_analysis_prompt(text: str) -> str:
-    return """You are an expert legal document analyzer. Analyze this document and provide specific details with exact quotes and references.
-
-Required Format:
+    base_prompt = """Analyze this legal document and provide a JSON response with the following structure:
 {
     "document_type": {
-        "type": "QUOTE exact document title/type",
-        "category": "QUOTE legal category (e.g., Family Law, Corporate, etc.)",
-        "jurisdiction": "QUOTE jurisdiction",
+        "type": "[Document Type]",
+        "category": "[Legal Category]",
+        "jurisdiction": "[Jurisdiction]",
         "parties": {
             "party1": {
-                "name": "QUOTE exact name",
-                "role": "QUOTE role"
+                "name": "[Party Name]",
+                "role": "[Party Role]"
             },
             "party2": {
-                "name": "QUOTE exact name",
-                "role": "QUOTE role"
+                "name": "[Party Name]",
+                "role": "[Party Role]"
             }
         },
-        "matter": "QUOTE specific matter/case reference"
+        "matter": "[Matter/Case Reference]"
     },
     "analysis": {
-        "summary": "SPECIFIC summary using only actual document content, including: 1) Document purpose, 2) Party names and roles, 3) Key monetary values, 4) Important dates, 5) Main obligations",
+        "summary": "[Document Summary]",
         "key_terms": [
             {
-                "term": "QUOTE section name/term",
-                "content": "QUOTE relevant text",
-                "value": "QUOTE monetary value if applicable",
+                "term": "[Term Name]",
+                "content": "[Term Content]",
+                "value": "[Monetary Value if applicable]",
                 "category": "FINANCIAL/LEGAL/OPERATIONAL"
             }
         ],
         "dates_and_deadlines": [
             {
-                "date": "QUOTE exact date",
-                "event": "QUOTE related event/requirement",
+                "date": "[Date]",
+                "event": "[Event Description]",
                 "significance": "HIGH/MEDIUM/LOW",
-                "details": "QUOTE relevant text"
+                "details": "[Event Details]"
             }
         ],
         "key_provisions": [
             {
-                "title": "QUOTE provision name",
-                "text": "QUOTE actual provision text",
-                "significance": "Explain using document content"
+                "title": "[Provision Title]",
+                "text": "[Provision Text]",
+                "significance": "[Significance]"
             }
         ],
         "risks": [
             {
-                "risk": "Describe risk using document content",
+                "risk": "[Risk Description]",
                 "severity": "HIGH/MEDIUM/LOW",
-                "basis": "QUOTE relevant text"
+                "basis": "[Risk Basis]"
             }
         ]
     }
 }
 
-REQUIREMENTS:
-1. Use EXACT QUOTES from the document
-2. Include ALL monetary values found
-3. Include ALL dates and deadlines
-4. Reference specific sections
-5. NO generic text - use actual document content
-6. If information isn't in document, mark as "Not specified"
+Instructions:
+1. Replace all text in [] with actual content from the document
+2. Use exact quotes for important text
+3. Include all monetary values found
+4. Include all dates and deadlines
+5. Reference specific sections
+6. Use only information from the document
+7. For any missing information, use "Not specified"
+8. Return only valid JSON
 
-Document text to analyze:
-{text}"""
+Analyze this document:
+"""
+    return base_prompt + text
 
 @app.post("/analyze")
 async def analyze_document(file: UploadFile = File(...)):
