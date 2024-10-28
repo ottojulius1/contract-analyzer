@@ -172,18 +172,6 @@
             loadingText.textContent = text;
         }
 
-        function getCategoryColor(category) {
-            const colors = {
-                'FINANCIAL': 'bg-green-100 text-green-800',
-                'LEGAL': 'bg-blue-100 text-blue-800',
-                'OPERATIONAL': 'bg-yellow-100 text-yellow-800',
-                'HIGH': 'bg-red-100 text-red-800',
-                'MEDIUM': 'bg-yellow-100 text-yellow-800',
-                'LOW': 'bg-blue-100 text-blue-800'
-            };
-            return colors[category] || 'bg-gray-100 text-gray-800';
-        }
-
         // File Upload Handling for Analysis
         fileInput.addEventListener('change', (e) => {
             logDebug('File input change event triggered');
@@ -235,21 +223,6 @@
                     dropZone.querySelector('p').textContent = 'Drop your PDF document here or click to upload';
                 }
             }
-        });
-
-        // Tab Handling for Overview, Clause Analysis, Risks & Flags, Q&A
-        document.querySelectorAll('.tab-button').forEach(button => {
-            button.addEventListener('click', () => {
-                logDebug('Tab clicked:', button.dataset.tab);
-                document.querySelectorAll('.tab-button').forEach(b => {
-                    b.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
-                });
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-
-                // Highlight the active tab
-                button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
-                document.getElementById(`${button.dataset.tab}-tab`).classList.remove('hidden');
-            });
         });
 
         // Document Analysis
@@ -304,150 +277,40 @@
                         <span class="font-medium">Confidence:</span>
                         <span>${(docType.confidence * 100).toFixed(1)}%</span>
                     </div>
-                    <div>
-                        <span class="font-medium">Industry:</span>
-                        <span>${docType.industry || 'Not specified'}</span>
-                    </div>
-                    <div>
-                        <span class="font-medium">Jurisdiction:</span>
-                        <span>${docType.jurisdiction || 'Not specified'}</span>
-                    </div>
-                    <div>
-                        <span class="font-medium">Indicators:</span>
-                        <ul class="list-disc pl-4 mt-1">
-                            ${docType.indicators.map(i => `<li class="text-sm">${i}</li>`).join('')}
-                        </ul>
-                    </div>
                 </div>
             `;
-
-            // Display quick stats
-            document.getElementById('quickStatsContent').innerHTML = `
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="p-3 bg-white rounded-lg shadow">
-                        <div class="text-sm text-gray-600">Key Terms</div>
-                        <div class="text-xl font-semibold">${analysis.key_terms?.length || 0}</div>
-                    </div>
-                    <div class="p-3 bg-white rounded-lg shadow">
-                        <div class="text-sm text-gray-600">Important Dates</div>
-                        <div class="text-xl font-semibold">${analysis.dates?.length || 0}</div>
-                    </div>
-                    <div class="p-3 bg-white rounded-lg shadow">
-                        <div class="text-sm text-gray-600">Risks Identified</div>
-                        <div class="text-xl font-semibold">${analysis.risks?.length || 0}</div>
-                    </div>
-                    <div class="p-3 bg-white rounded-lg shadow">
-                        <div class="text-sm text-gray-600">Clauses Analyzed</div>
-                        <div class="text-xl font-semibold">${analysis.clause_analysis?.clauses?.length || 0}</div>
-                    </div>
-                </div>
-            `;
-
-            // Display summary
-            document.getElementById('summaryContent').textContent = analysis.summary;
 
             // Display key terms
             document.getElementById('keyTermsContent').innerHTML = analysis.key_terms?.map(term => `
                 <div class="bg-white shadow rounded-lg p-4">
-                    <div class="flex justify-between items-start">
-                        <div class="font-medium">${term.term}</div>
-                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(term.category)}">
-                            ${term.category}
-                        </span>
-                    </div>
+                    <div class="font-medium">${term.term}</div>
                     <div class="text-gray-600 mt-1">${term.value}</div>
                 </div>
-            `).join('') || '';
+            `).join('') || '<p>No key terms found.</p>';
 
-            // Display dates
+            // Display important dates
             document.getElementById('datesContent').innerHTML = analysis.dates?.map(date => `
                 <div class="bg-white shadow rounded-lg p-4">
-                    <div class="flex justify-between items-start">
-                        <div class="font-medium">${date.event}</div>
-                        <span class="text-xs px-2 py-1 rounded ${getCategoryColor(date.importance)}">
-                            ${date.importance}
-                        </span>
-                    </div>
+                    <div class="font-medium">${date.event}</div>
                     <div class="text-gray-600 mt-1">${date.date}</div>
                 </div>
-            `).join('') || '';
+            `).join('') || '<p>No important dates found.</p>';
 
-            // Display clause analysis
-            document.getElementById('clausesContent').innerHTML = analysis.clause_analysis?.clauses?.map(clause => `
+            // Display risks
+            document.getElementById('risksContent').innerHTML = analysis.risks?.map(risk => `
                 <div class="bg-white shadow rounded-lg p-4">
-                    <div class="font-medium">${clause.clause_name}</div>
-                    <div class="text-gray-600 mt-1">${clause.clause_text}</div>
+                    <div class="font-medium">${risk.description}</div>
+                    <div class="text-gray-600 mt-1">${risk.severity}</div>
                 </div>
-            `).join('') || '<p>No key clauses found.</p>';
+            `).join('') || '<p>No risks identified.</p>';
 
-            document.getElementById('missingClausesContent').innerHTML = analysis.clause_analysis?.missing_clauses?.map(missing => `
-                <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg">
-                    ${missing}
+            // Display flags
+            document.getElementById('flagsContent').innerHTML = analysis.flags?.map(flag => `
+                <div class="bg-white shadow rounded-lg p-4">
+                    <div class="font-medium">${flag.issue}</div>
+                    <div class="text-gray-600 mt-1">${flag.recommendation}</div>
                 </div>
-            `).join('') || '<p>No missing clauses identified.</p>';
-
-            document.getElementById('unusualProvisionsContent').innerHTML = analysis.clause_analysis?.unusual_provisions?.map(unusual => `
-                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                    ${unusual}
-                </div>
-            `).join('') || '<p>No unusual provisions identified.</p>';
-        }
-
-        // Q&A Submission Handling
-        const questionForm = document.getElementById('questionForm');
-        const questionInput = document.getElementById('questionInput');
-        const qaHistory = document.getElementById('qaHistory');
-
-        questionForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const question = questionInput.value.trim();
-            if (!question || !currentFile) return;
-
-            const formData = new FormData();
-            formData.append('file', currentFile);
-            formData.append('question', question);
-
-            try {
-                logDebug('Submitting question:', question);
-                const questionElement = addToQAHistory(question, 'Analyzing...');
-                showLoading(true, 'Getting answer...');
-
-                const response = await fetch(`${BACKEND_URL}/ask`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-                logDebug('Answer received:', data);
-                
-                if (!response.ok) {
-                    throw new Error(data.detail || 'Failed to get answer');
-                }
-
-                updateQAResponse(questionElement, data.answer);
-                questionInput.value = '';
-            } catch (error) {
-                console.error('Q&A error:', error);
-                alert('Error getting answer: ' + error.message);
-            } finally {
-                showLoading(false);
-            }
-        });
-
-        // Helper Functions for Q&A
-        function addToQAHistory(question, answer) {
-            const qaElement = document.createElement('div');
-            qaElement.className = 'border rounded-lg p-4';
-            qaElement.innerHTML = `
-                <div class="font-medium">Q: ${question}</div>
-                <div class="text-gray-600 mt-2 answer">A: ${answer}</div>
-            `;
-            qaHistory.insertBefore(qaElement, qaHistory.firstChild);
-            return qaElement;
-        }
-
-        function updateQAResponse(element, answer) {
-            element.querySelector('.answer').textContent = `A: ${answer}`;
+            `).join('') || '<p>No flags identified.</p>';
         }
     </script>
 </body>
