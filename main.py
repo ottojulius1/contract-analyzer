@@ -8,6 +8,8 @@ import os
 import json
 import logging
 import datetime
+import re
+from typing import Dict, List, Optional, Union
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -105,6 +107,396 @@ Required Analysis Structure:
                 "source": "Section reference"
             }
         ]
+    },
+    "key_terms_analysis": {
+        "financial_terms": [
+            {
+                "term_type": "Type of financial term",
+                "details": "Specific details",
+                "amount": "Monetary value if applicable",
+                "conditions": "Any conditions",
+                "timing": "When it applies",
+                "calculation_method": "How it's calculated",
+                "payment_terms": "Payment requirements",
+                "consequences": "What happens if not met",
+                "exceptions": "Any exceptions",
+                "source": "Section reference",
+                "related_provisions": ["Related sections"]
+            }
+        ],
+        "operational_terms": [
+            {
+                "requirement": "What must be done",
+                "who": "Responsible party",
+                "when": "Timing/deadline",
+                "how": "Process requirements",
+                "standards": "Performance standards",
+                "verification": "How compliance is verified",
+                "reporting": "Reporting requirements",
+                "consequences": "Results of non-compliance",
+                "source": "Section reference"
+            }
+        ],
+        "legal_terms": [
+            {
+                "term": "Legal requirement",
+                "explanation": "Plain language explanation",
+                "obligations": "What it requires",
+                "implications": "Legal significance",
+                "applicable_law": "Governing law/regulation",
+                "compliance_requirements": "How to comply",
+                "exceptions": "Any exceptions",
+                "precedents": "Relevant legal precedents",
+                "source": "Section reference"
+            }
+        ],
+        "defined_terms": [
+            {
+                "term": "Defined term",
+                "definition": "Exact definition from document",
+                "context": "How it's used",
+                "significance": "Why it matters",
+                "related_terms": ["Related definitions"],
+                "source": "Section reference"
+            }
+        ]
+    },
+    "critical_dates_deadlines": {
+        "immediate_deadlines": [
+            {
+                "deadline": "Specific date/timeline",
+                "requirement": "What's required",
+                "responsible_party": "Who must act",
+                "prerequisites": "What must happen first",
+                "consequences": "What happens if missed",
+                "extensions": "Possible extensions",
+                "notification_requirements": "Who must be notified",
+                "documentation": "Required documentation",
+                "source": "Section reference"
+            }
+        ],
+        "recurring_obligations": [
+            {
+                "frequency": "How often",
+                "requirement": "What's required",
+                "details": "Specific requirements",
+                "timing": "When within period",
+                "responsible_party": "Who must perform",
+                "tracking_method": "How to track",
+                "verification": "How to verify completion",
+                "consequences": "Results of non-compliance"
+            }
+        ],
+        "conditional_deadlines": [
+            {
+                "trigger": "What triggers the deadline",
+                "timeline": "When it must be done",
+                "requirement": "What must be done",
+                "responsible_party": "Who must act",
+                "notification": "Who must be notified",
+                "documentation": "Required documentation",
+                "consequences": "What happens if missed"
+            }
+        ],
+        "key_dates": [
+            {
+                "date": "Specific date",
+                "event": "What happens",
+                "significance": "Why it matters",
+                "requirements": "What's required",
+                "parties_involved": ["Who's involved"],
+                "source": "Section reference"
+            }
+        ]
+    },
+    "rights_and_obligations": {
+        "party_rights": [
+            {
+                "party": "Who has the right",
+                "right": "Specific right",
+                "conditions": "Conditions for exercising",
+                "limitations": "Any limitations",
+                "exercise_procedure": "How to exercise",
+                "notice_requirements": "Required notifications",
+                "time_constraints": "Time limits",
+                "exclusions": "What's not included",
+                "source": "Section reference"
+            }
+        ],
+        "party_obligations": [
+            {
+                "party": "Who has obligation",
+                "obligation": "Specific requirement",
+                "standards": "Performance standards",
+                "timing": "When it applies",
+                "prerequisites": "What must happen first",
+                "compliance_method": "How to comply",
+                "verification": "How compliance is verified",
+                "consequences": "Results of breach",
+                "cure_provisions": "How to fix breaches",
+                "source": "Section reference"
+            }
+        ],
+        "mutual_obligations": [
+            {
+                "obligation": "Shared requirement",
+                "parties_involved": ["List parties"],
+                "details": "Specific requirements",
+                "coordination": "How parties work together",
+                "responsibilities": "Individual responsibilities",
+                "dispute_resolution": "How to resolve disagreements",
+                "source": "Section reference"
+            }
+        ],
+        "conditional_obligations": [
+            {
+                "trigger": "What activates obligation",
+                "obligation": "What must be done",
+                "responsible_party": "Who must do it",
+                "timeline": "When it must be done",
+                "conditions": "Required conditions",
+                "verification": "How to verify",
+                "source": "Section reference"
+            }
+        ]
+    },
+    "key_provisions_analysis": {
+        "essential_clauses": [
+            {
+                "title": "Clause name",
+                "content": "Exact quote",
+                "plain_english": "Simple explanation",
+                "legal_significance": "Legal meaning",
+                "practical_implications": "Real-world impact",
+                "requirements": "What it requires",
+                "enforcement": "How it's enforced",
+                "relationship": "Connection to other clauses",
+                "precedent_analysis": "Relevant legal precedents",
+                "source": "Section reference"
+            }
+        ],
+        "protective_clauses": [
+            {
+                "protection_type": "What it protects",
+                "mechanism": "How it works",
+                "beneficiary": "Who it protects",
+                "scope": "What's covered",
+                "limitations": "What's not covered",
+                "enforcement": "How it's enforced",
+                "duration": "How long it lasts",
+                "exceptions": "When it doesn't apply",
+                "source": "Section reference"
+            }
+        ],
+        "procedural_requirements": [
+            {
+                "procedure": "What must be done",
+                "steps": ["Specific steps required"],
+                "timing": "When it applies",
+                "parties_involved": ["Who's involved"],
+                "documentation": "Required documentation",
+                "verification": "How to verify completion",
+                "consequences": "What happens if not followed",
+                "source": "Section reference"
+            }
+        ],
+        "termination_provisions": [
+            {
+                "scenario": "Termination situation",
+                "requirements": "What's required",
+                "process": "Steps to follow",
+                "notice": "Notice requirements",
+                "cure_rights": "Rights to fix issues",
+                "consequences": "Results of termination",
+                "surviving_obligations": "What continues after",
+                "source": "Section reference"
+            }
+        ]
+    },
+    "comprehensive_risk_analysis": {
+        "contractual_risks": [
+            {
+                "risk": "Specific risk",
+                "scenario": "How it might occur",
+                "likelihood": "HIGH/MEDIUM/LOW",
+                "impact": "Potential consequences",
+                "affected_party": "Who is at risk",
+                "trigger_events": ["What could cause this"],
+                "early_warning_signs": ["Signs to watch for"],
+                "mitigation_options": "How to reduce risk",
+                "contingency_plans": "What to do if it happens",
+                "source_provisions": ["Relevant sections"],
+                "monitoring_requirements": "How to monitor",
+                "insurance_requirements": "Required coverage"
+            }
+        ],
+        "compliance_risks": [
+            {
+                "requirement": "What's required",
+                "risk": "Risk of non-compliance",
+                "regulatory_framework": "Governing regulations",
+                "consequences": "Potential penalties/outcomes",
+                "likelihood": "HIGH/MEDIUM/LOW",
+                "impact": "Severity of consequences",
+                "compliance_steps": "How to comply",
+                "monitoring": "How to track compliance",
+                "reporting": "Required reporting",
+                "documentation": "Required documentation",
+                "source": "Section reference"
+            }
+        ],
+        "practical_risks": [
+            {
+                "risk": "Real-world risk",
+                "context": "When it might occur",
+                "warning_signs": ["What to watch for"],
+                "business_impact": "Effect on operations",
+                "financial_impact": "Cost implications",
+                "reputation_impact": "Effect on reputation",
+                "preventive_steps": ["How to prevent"],
+                "remedial_actions": ["What to do if it happens"],
+                "insurance": "Available coverage",
+                "source": "Section reference"
+            }
+        ],
+        "relationship_risks": [
+            {
+                "risk": "Potential relationship issue",
+                "context": "How it might arise",
+                "parties_affected": ["Who's affected"],
+                "early_signs": ["Warning indicators"],
+                "impact_on_performance": "Effect on obligations",
+                "communication_requirements": "Required communications",
+                "prevention": "How to prevent",
+                "management": "How to handle if it occurs",
+                "escalation_process": "How to escalate issues",
+                "resolution_methods": "How to resolve",
+                "source": "Section reference"
+            }
+        ]
+    },
+    "special_considerations": {
+        "unique_features": [
+            {
+                "feature": "What's unique",
+                "significance": "Why it matters",
+                "implications": "What it means",
+                "compare_to_standard": "How it differs from normal",
+                "advantages": ["Benefits"],
+                "disadvantages": ["Drawbacks"],
+                "special_requirements": "Special handling needed",
+                "source": "Section reference"
+            }
+        ],
+        "potential_issues": [
+            {
+                "issue": "Potential problem",
+                "context": "When it might arise",
+                "implications": "What it could mean",
+                "early_indicators": ["Warning signs"],
+                "preventive_measures": "How to prevent",
+                "monitoring": "How to track",
+                "remedies": "How to address",
+                "escalation": "When to escalate",
+                "source": "Section reference"
+            }
+        ],
+        "practice_tips": [
+            {
+                "tip": "Practical advice",
+                "rationale": "Why it matters",
+                "implementation": "How to follow",
+                "benefits": "Why it helps",
+                "timing": "When to apply",
+                "resources_needed": "What's required",
+                "success_metrics": "How to measure success",
+                "source": "Section reference"
+            }
+        ],
+        "industry_specific": [
+            {
+                "consideration": "Industry-specific issue",
+                "relevance": "Why it matters",
+                "industry_standards": "Applicable standards",
+                "best_practices": "Industry best practices",
+                "regulatory_aspects": "Special regulations",
+                "source": "Section reference"
+            }
+        ]
+    },
+    "professional_obligations": {
+        "attorney_obligations": [
+            {
+                "obligation": "Specific duty",
+                "standard": "Performance standard",
+                "scope": "What it covers",
+                "limitations": "What it doesn't cover",
+                "compliance_requirements": "How to comply",
+                "ethical_considerations": "Ethical aspects",
+                "documentation_needed": "Required records",
+                "source": "Section reference"
+            }
+        ],
+        "client_obligations": [
+            {
+                "obligation": "Required from client",
+                "details": "Specific requirements",
+                "timing": "When it applies",
+                "importance": "Why it matters",
+                "consequences": "If not fulfilled",
+                "support_needed": "Help required",
+                "verification": "How to verify",
+                "source": "Section reference"
+            }
+        ],
+        "ethical_considerations": [
+            {
+                "issue": "Ethical concern",
+                "rule_reference": "Governing rule",
+                "requirements": "What's required",
+                "limitations": "What's prohibited",
+                "best_practices": "How to handle",
+                "documentation": "Required records",
+                "source": "Section reference"
+            }
+        ]
+    },
+    "next_steps_and_recommendations": {
+        "immediate_actions": [
+            {
+                "action": "What to do",
+                "deadline": "When to do it",
+                "responsibility": "Who does it",
+                "details": "How to do it",
+                "importance": "Why it's urgent",
+                "prerequisites": "What's needed first",
+                "verification": "How to confirm completion",
+                "documentation": "Required records"
+            }
+        ],
+        "monitoring_requirements": [
+            {
+                "item": "What to monitor",
+                "frequency": "How often",
+                "method": "How to track",
+                "responsible_party": "Who monitors",
+                "indicators": "What to watch for",
+                "reporting": "How to report",
+                "response_plan": "What to do if issues arise",
+                "documentation": "Required records"
+            }
+        ],
+        "best_practices": [
+            {
+                "practice": "Recommended approach",
+                "rationale": "Why recommended",
+                "implementation": "How to implement",
+                "timing": "When to implement",
+                "resources": "What's needed",
+                "benefits": "Expected benefits",
+                "measures": "How to measure success"
+            }
+        ]
     }
 }
 
@@ -139,8 +531,7 @@ async def analyze_document(file: UploadFile = File(...)):
         
         for page_num in range(len(pdf_reader.pages)):
             page_text = pdf_reader.pages[page_num].extract_text()
-            extracted_text += f"\nPage {page_num + 1}:
-{page_text}"
+            extracted_text += f"\nPage {page_num + 1}:\n{page_text}"
         
         logger.debug(f"Extracted {len(extracted_text)} characters from PDF")
 
@@ -161,9 +552,7 @@ Your task is to:
 7. Explain in both legal and plain language
 8. Focus on practical implications
 9. Highlight all critical deadlines
-10. Identify potential issues proactively
-
-Your response must strictly follow the given JSON format. Any deviation will cause errors. Ensure that it is a valid JSON, and do not include anything else apart from the JSON structure."""
+10. Identify potential issues proactively"""
 
         response = client.chat.completions.create(
             model="gpt-4",
@@ -180,47 +569,15 @@ Your response must strictly follow the given JSON format. Any deviation will cau
         
         try:
             cleaned_response = response_text.strip()
-            if cleaned_response.startswith("```json"):
+            if cleaned_response.startswith("
+json"):
                 cleaned_response = cleaned_response[7:]
-            if cleaned_response.endswith("```"):
+            if cleaned_response.endswith("
+"):
                 cleaned_response = cleaned_response[:-3]
             
             parsed_response = json.loads(cleaned_response)
-
-            # Ensure all necessary keys are present in the response, even if they are empty
-            if "document_profile" not in parsed_response:
-                parsed_response["document_profile"] = {}
-            parsed_response["document_profile"].setdefault("classification", {
-                "document_type": "",
-                "legal_category": "",
-                "jurisdiction": "",
-                "governing_law": "",
-                "document_subtype": "",
-                "applicable_regulations": []
-            })
-            parsed_response["document_profile"].setdefault("parties", [])
-            parsed_response["document_profile"].setdefault("matter_info", {
-                "subject": "",
-                "purpose": "",
-                "scope": {
-                    "included": [],
-                    "excluded": [],
-                    "conditional": [],
-                    "geographic_scope": "",
-                    "temporal_scope": ""
-                },
-                "special_circumstances": [],
-                "related_matters": [],
-                "precedent_documents": []
-            })
-
-            parsed_response.setdefault("comprehensive_summary", {
-                "executive_brief": "",
-                "key_points": [],
-                "unusual_aspects": [],
-                "critical_elements": []
-            })
-
+            
             parsed_response["analysis_metadata"] = {
                 "timestamp": datetime.datetime.now().isoformat(),
                 "document_length": len(extracted_text),
@@ -253,8 +610,7 @@ async def ask_question(file: UploadFile = File(...), question: str = Form(...)):
         extracted_text = ""
         
         for page_num in range(len(pdf_reader.pages)):
-            extracted_text += f"\nPage {page_num + 1}:
-{pdf_reader.pages[page_num].extract_text()}"
+            extracted_text += f"\nPage {page_num + 1}:\n{pdf_reader.pages[page_num].extract_text()}"
         
         prompt = f"""Document text: {extracted_text}
 
