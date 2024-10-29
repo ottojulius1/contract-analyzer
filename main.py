@@ -8,7 +8,6 @@ import os
 import json
 import logging
 import datetime
-from typing import Dict, List, Optional
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -189,31 +188,45 @@ Your response must strictly follow the given JSON format. Any deviation will cau
             parsed_response = json.loads(cleaned_response)
 
             # Ensure all necessary keys are present in the response, even if they are empty
-            parsed_response.setdefault("document_metadata", {}).setdefault("type", {
-                "primary": "",
-                "category": "",
-                "jurisdiction": ""
+            if "document_profile" not in parsed_response:
+                parsed_response["document_profile"] = {}
+            parsed_response["document_profile"].setdefault("classification", {
+                "document_type": "",
+                "legal_category": "",
+                "jurisdiction": "",
+                "governing_law": "",
+                "document_subtype": "",
+                "applicable_regulations": []
             })
-            parsed_response.setdefault("document_metadata", {}).setdefault("matter_details", {
-                "case_reference": "",
-                "subject_matter": ""
+            parsed_response["document_profile"].setdefault("parties", [])
+            parsed_response["document_profile"].setdefault("matter_info", {
+                "subject": "",
+                "purpose": "",
+                "scope": {
+                    "included": [],
+                    "excluded": [],
+                    "conditional": [],
+                    "geographic_scope": "",
+                    "temporal_scope": ""
+                },
+                "special_circumstances": [],
+                "related_matters": [],
+                "precedent_documents": []
             })
-            parsed_response.setdefault("financial_structure", {}).setdefault("fee_arrangement", {
-                "base_rates": []
+
+            parsed_response.setdefault("comprehensive_summary", {
+                "executive_brief": "",
+                "key_points": [],
+                "unusual_aspects": [],
+                "critical_elements": []
             })
-            parsed_response.setdefault("key_dates", {}).setdefault("document_dates", [])
-            parsed_response.setdefault("critical_provisions", {}).setdefault("key_clauses", [])
-            parsed_response.setdefault("risk_analysis", {
-                "financial_risks": [],
-                "legal_risks": [],
-                "operational_risks": []
-            })
-            parsed_response.setdefault("analysis_metadata", {
+
+            parsed_response["analysis_metadata"] = {
                 "timestamp": datetime.datetime.now().isoformat(),
                 "document_length": len(extracted_text),
                 "analysis_version": "3.0",
                 "document_name": file.filename
-            })
+            }
 
             return JSONResponse(content=parsed_response)
             
@@ -240,4 +253,45 @@ async def ask_question(file: UploadFile = File(...), question: str = Form(...)):
         extracted_text = ""
         
         for page_num in range(len(pdf_reader.pages)):
-            extracted_text += f"\nPage
+            extracted_text += f"\nPage {page_num + 1}:
+{pdf_reader.pages[page_num].extract_text()}"
+        
+        prompt = f"""Document text: {extracted_text}
+
+Question: {question}
+
+Provide a comprehensive answer that:
+1. Quotes specific sections of the document
+2. References exact page/section numbers
+3. Explains in plain language
+4. Notes any legal implications
+5. Highlights practical impacts
+6. Identifies any related provisions
+7. Notes any important caveats
+8. Suggests relevant follow-up considerations
+
+Base your answer ONLY on the document's actual content."""
+        
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an expert legal analyst. Provide detailed, accurate answers with specific references to the document."
+                },
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.1,
+            max_tokens=2000
+        )
+        
+        response_text = response.choices[0].message.content
+        return {"answer": response_text}
+        
+    except Exception as e:
+        logger.error(f"Error answering question: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing question: {str(e)}")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
