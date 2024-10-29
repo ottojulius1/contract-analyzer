@@ -61,6 +61,7 @@
                     <span class="text-gray-600" id="loadingText">Analyzing document...</span>
                 </div>
             </div>
+
             <!-- Results Section -->
             <div id="resultsSection" class="hidden">
                 <!-- Document Info Header -->
@@ -128,6 +129,8 @@
                                     data-tab="risks">Risks & Analysis</button>
                             <button class="tab-button px-3 py-2 text-sm font-medium" 
                                     data-tab="qa">Q&A</button>
+                            <button class="tab-button px-3 py-2 text-sm font-medium" 
+                                    data-tab="recommendations">Next Steps & Recommendations</button>
                         </nav>
                     </div>
 
@@ -192,6 +195,14 @@
                                     </div>
                                 </form>
                                 <div id="qaHistory" class="space-y-4 content-box"></div>
+                            </div>
+                        </div>
+
+                        <!-- Recommendations Tab -->
+                        <div id="recommendations-tab" class="tab-content hidden">
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-semibold">Next Steps & Recommendations</h3>
+                                <div id="recommendationsContent" class="space-y-4 content-box"></div>
                             </div>
                         </div>
                     </div>
@@ -325,6 +336,9 @@
                 document.getElementById('docCategory').textContent = data.document_metadata.type.category;
                 document.getElementById('docJurisdiction').textContent = data.document_metadata.jurisdiction.state;
                 document.getElementById('docMatter').textContent = data.document_metadata.matter_details.case_reference;
+                document.getElementById('governingLaw').textContent = data.document_metadata.type.governing_law;
+                document.getElementById('docSubject').textContent = data.document_metadata.matter_details.subject_matter;
+                document.getElementById('docPurpose').textContent = data.document_metadata.matter_details.purpose;
 
                 // Parties
                 const partiesList = document.getElementById('docParties');
@@ -443,6 +457,23 @@
                     `;
                     risksContent.appendChild(div);
                 });
+
+                // Recommendations
+                const recommendationsContent = document.getElementById('recommendationsContent');
+                recommendationsContent.innerHTML = '';
+                if (data.next_steps_and_recommendations?.immediate_actions) {
+                    data.next_steps_and_recommendations.immediate_actions.forEach(action => {
+                        const div = document.createElement('div');
+                        div.className = 'bg-white shadow rounded-lg p-4';
+                        div.innerHTML = `
+                            <div class="font-medium">Action: ${action.action}</div>
+                            <div class="text-gray-600 mt-2">Deadline: ${action.deadline}</div>
+                            <div class="text-sm mt-1">Responsible: ${action.responsibility}</div>
+                            <div class="text-sm mt-1">Details: ${action.details}</div>
+                        `;
+                        recommendationsContent.appendChild(div);
+                    });
+                }
 
                 resultsSection.classList.remove('hidden');
             } catch (error) {
