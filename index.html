@@ -11,7 +11,7 @@
             overflow-y: auto;
         }
         .content-box::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
         .content-box::-webkit-scrollbar-track {
             background: #f1f1f1;
@@ -20,9 +20,6 @@
         .content-box::-webkit-scrollbar-thumb {
             background: #888;
             border-radius: 4px;
-        }
-        .content-box::-webkit-scrollbar-thumb:hover {
-            background: #555;
         }
     </style>
 </head>
@@ -55,11 +52,9 @@
             </div>
 
             <!-- Loading State -->
-            <div id="loadingState" class="hidden">
-                <div class="flex items-center justify-center space-x-2">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                    <span class="text-gray-600" id="loadingText">Analyzing document...</span>
-                </div>
+            <div id="loadingState" class="hidden text-center py-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                <p class="mt-4 text-gray-600" id="loadingText">Analyzing document...</p>
             </div>
             <!-- Results Section -->
             <div id="resultsSection" class="hidden">
@@ -119,18 +114,17 @@
                 <!-- Analysis Tabs -->
                 <div class="mb-6">
                     <div class="border-b border-gray-200">
-                        <nav class="flex flex-wrap gap-2" aria-label="Tabs">
+                        <nav class="flex space-x-4" aria-label="Tabs">
                             <button class="tab-button px-3 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600" 
                                     data-tab="overview">Overview</button>
                             <button class="tab-button px-3 py-2 text-sm font-medium" 
                                     data-tab="clauses">Key Provisions</button>
                             <button class="tab-button px-3 py-2 text-sm font-medium" 
-                                    data-tab="risks">Risks & Analysis</button>
+                                    data-tab="risks">Risks & Flags</button>
                             <button class="tab-button px-3 py-2 text-sm font-medium" 
                                     data-tab="qa">Q&A</button>
                         </nav>
                     </div>
-
                     <!-- Tab Contents -->
                     <div class="mt-6">
                         <!-- Overview Tab -->
@@ -160,14 +154,33 @@
                                     <h3 class="text-lg font-semibold mb-3">Key Provisions</h3>
                                     <div id="clausesContent" class="space-y-4 content-box"></div>
                                 </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-3">Obligations</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div id="party1Obligations" class="space-y-2">
+                                            <h4 class="font-medium" id="party1Name">Party 1 Obligations</h4>
+                                            <div class="content-box"></div>
+                                        </div>
+                                        <div id="party2Obligations" class="space-y-2">
+                                            <h4 class="font-medium" id="party2Name">Party 2 Obligations</h4>
+                                            <div class="content-box"></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Risks Tab -->
                         <div id="risks-tab" class="tab-content hidden">
-                            <div class="space-y-4">
-                                <h3 class="text-lg font-semibold">Identified Risks</h3>
-                                <div id="risksContent" class="space-y-4 content-box"></div>
+                            <div class="space-y-6">
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-3">Identified Risks</h3>
+                                    <div id="risksContent" class="space-y-4 content-box"></div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-3">Next Steps</h3>
+                                    <div id="nextStepsContent" class="space-y-4 content-box"></div>
+                                </div>
                             </div>
                         </div>
 
@@ -242,8 +255,8 @@
                 if (file.type === 'application/pdf') {
                     currentFile = file;
                     analyzeBtn.disabled = false;
-                    dropZone.querySelector('p').textContent = Selected: ${file.name};
-                    document.getElementById('fileSize').textContent = Size: ${formatFileSize(file.size)};
+                    dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
+                    document.getElementById('fileSize').textContent = `Size: ${formatFileSize(file.size)}`;
                 } else {
                     alert('Please upload a PDF file');
                     fileInput.value = '';
@@ -275,8 +288,8 @@
                 if (file.type === 'application/pdf') {
                     currentFile = file;
                     analyzeBtn.disabled = false;
-                    dropZone.querySelector('p').textContent = Selected: ${file.name};
-                    document.getElementById('fileSize').textContent = Size: ${formatFileSize(file.size)};
+                    dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
+                    document.getElementById('fileSize').textContent = `Size: ${formatFileSize(file.size)}`;
                 } else {
                     alert('Please upload a PDF file');
                 }
@@ -294,10 +307,9 @@
                 });
 
                 button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
-                document.getElementById(${button.dataset.tab}-tab).classList.remove('hidden');
+                document.getElementById(`${button.dataset.tab}-tab`).classList.remove('hidden');
             });
         });
-
         // Document Analysis
         analyzeBtn.addEventListener('click', async () => {
             if (!currentFile) return;
@@ -309,7 +321,7 @@
                 const formData = new FormData();
                 formData.append('file', currentFile);
 
-                const response = await fetch(${BACKEND_URL}/analyze, {
+                const response = await fetch(`${BACKEND_URL}/analyze`, {
                     method: 'POST',
                     body: formData
                 });
@@ -321,58 +333,62 @@
                 const data = await response.json();
                 
                 // Document Type Information
-                document.getElementById('docType').textContent = data.document_metadata.type.primary;
-                document.getElementById('docCategory').textContent = data.document_metadata.type.category;
-                document.getElementById('docJurisdiction').textContent = data.document_metadata.jurisdiction.state;
-                document.getElementById('docMatter').textContent = data.document_metadata.matter_details.case_reference;
+                document.getElementById('docType').textContent = data.document_type.type;
+                document.getElementById('docCategory').textContent = data.document_type.category;
+                document.getElementById('docJurisdiction').textContent = data.document_type.jurisdiction;
+                document.getElementById('docMatter').textContent = data.document_type.matter;
 
                 // Parties
                 const partiesList = document.getElementById('docParties');
                 partiesList.innerHTML = '';
-                if (data.document_metadata.parties.primary_parties) {
-                    data.document_metadata.parties.primary_parties.forEach(party => {
+                if (data.document_type.parties) {
+                    data.document_type.parties.forEach(party => {
                         const div = document.createElement('div');
                         div.className = 'text-sm p-2 bg-blue-50 rounded';
-                        div.textContent = ${party.name} (${party.role});
+                        div.textContent = `${party.name} (${party.role})`;
                         partiesList.appendChild(div);
                     });
                 }
 
                 // Quick Stats
                 document.getElementById('keyTermsCount').textContent = 
-                    (data.financial_structure?.fee_arrangement?.base_rates || []).length;
+                    (data.analysis.key_terms || []).length;
                 document.getElementById('datesCount').textContent = 
-                    (data.key_dates?.document_dates || []).length;
+                    (data.analysis.dates_and_deadlines || []).length;
                 document.getElementById('provisionsCount').textContent = 
-                    (data.critical_provisions?.key_clauses || []).length;
+                    (data.analysis.key_provisions || []).length;
                 document.getElementById('risksCount').textContent = 
-                    ((data.risk_analysis?.financial_risks || []).length +
-                     (data.risk_analysis?.legal_risks || []).length +
-                     (data.risk_analysis?.operational_risks || []).length);
+                    (data.analysis.risks || []).length;
 
                 // Summary
-                if (data.document_metadata.matter_details?.subject_matter) {
-                    document.getElementById('summaryContent').textContent = 
-                        data.document_metadata.matter_details.subject_matter;
-                }
+                document.getElementById('summaryContent').textContent = data.analysis.summary;
 
                 // Key Terms
                 const keyTermsContent = document.getElementById('keyTermsContent');
                 keyTermsContent.innerHTML = '';
-                if (data.financial_structure?.fee_arrangement?.base_rates) {
-                    data.financial_structure.fee_arrangement.base_rates.forEach(rate => {
+                if (data.analysis.key_terms) {
+                    data.analysis.key_terms.forEach(term => {
                         const div = document.createElement('div');
                         div.className = 'bg-white shadow rounded-lg p-4';
-                        div.innerHTML = 
+                        div.innerHTML = `
                             <div class="flex justify-between items-start">
-                                <div class="font-medium">${rate.person}</div>
-                                <span class="text-xs px-2 py-1 rounded bg-green-100 text-green-800">
-                                    FINANCIAL
+                                <div class="font-medium">${term.term}</div>
+                                <span class="text-xs px-2 py-1 rounded ${getCategoryColor(term.category)}">
+                                    ${term.category}
                                 </span>
                             </div>
-                            <div class="text-gray-600 mt-1">Rate: ${rate.rate}</div>
-                            <div class="text-gray-500 mt-1">${rate.conditions || ''}</div>
-                        ;
+                            <div class="text-gray-600 mt-2">${term.content}</div>
+                            ${term.value ? `
+                                <div class="mt-2 text-green-600 font-medium">
+                                    Value: ${term.value}
+                                </div>
+                            ` : ''}
+                            ${term.location ? `
+                                <div class="mt-2 text-sm text-gray-500">
+                                    Section: ${term.location}
+                                </div>
+                            ` : ''}
+                        `;
                         keyTermsContent.appendChild(div);
                     });
                 }
@@ -380,69 +396,118 @@
                 // Important Dates
                 const datesContent = document.getElementById('datesContent');
                 datesContent.innerHTML = '';
-                if (data.key_dates?.document_dates) {
-                    data.key_dates.document_dates.forEach(date => {
+                if (data.analysis.dates_and_deadlines) {
+                    data.analysis.dates_and_deadlines.forEach(date => {
                         const div = document.createElement('div');
                         div.className = 'bg-white shadow rounded-lg p-4';
-                        div.innerHTML = 
+                        div.innerHTML = `
                             <div class="flex justify-between items-start">
                                 <div class="font-medium">${date.event}</div>
                                 <span class="text-xs px-2 py-1 rounded ${getCategoryColor(date.significance)}">
                                     ${date.significance}
                                 </span>
                             </div>
-                            <div class="text-gray-600 mt-1">${date.date}</div>
-                            <div class="text-sm mt-1">${date.details}</div>
-                        ;
+                            <div class="text-blue-600 mt-1">${date.date}</div>
+                            <div class="text-gray-600 mt-1">${date.details}</div>
+                        `;
                         datesContent.appendChild(div);
                     });
                 }
 
                 // Key Provisions
-                const provisionsContent = document.getElementById('clausesContent');
-                provisionsContent.innerHTML = '';
-                if (data.critical_provisions?.key_clauses) {
-                    data.critical_provisions.key_clauses.forEach(clause => {
+                const clausesContent = document.getElementById('clausesContent');
+                clausesContent.innerHTML = '';
+                if (data.analysis.key_provisions) {
+                    data.analysis.key_provisions.forEach(clause => {
                         const div = document.createElement('div');
                         div.className = 'bg-white shadow rounded-lg p-4';
-                        div.innerHTML = 
+                        div.innerHTML = `
                             <div class="font-medium">${clause.title}</div>
-                            <div class="text-gray-600 mt-2">${clause.content}</div>
-                            <div class="text-blue-600 mt-2 text-sm">${clause.significance}</div>
-                            ${clause.reference ? <div class="text-gray-500 mt-1 text-sm">Section: ${clause.reference}</div> : ''}
-                        ;
-                        provisionsContent.appendChild(div);
+                            <div class="mt-2 p-3 bg-gray-50 rounded text-gray-600 text-sm">${clause.text}</div>
+                            <div class="mt-2 text-blue-600 text-sm">${clause.significance}</div>
+                            ${clause.location ? `
+                                <div class="mt-2 text-gray-500 text-sm">
+                                    Section: ${clause.location}
+                                </div>
+                            ` : ''}
+                        `;
+                        clausesContent.appendChild(div);
                     });
                 }
 
-                // Risks
+                // Party Obligations
+                if (data.analysis.obligations) {
+                    const party1Div = document.getElementById('party1Obligations');
+                    const party2Div = document.getElementById('party2Obligations');
+                    
+                    if (data.analysis.obligations.party1) {
+                        const content = document.createElement('div');
+                        content.className = 'space-y-2';
+                        content.innerHTML = data.analysis.obligations.party1.map(obligation => `
+                            <div class="bg-white shadow rounded p-3">
+                                ${obligation}
+                            </div>
+                        `).join('');
+                        party1Div.querySelector('.content-box').innerHTML = '';
+                        party1Div.querySelector('.content-box').appendChild(content);
+                    }
+                    
+                    if (data.analysis.obligations.party2) {
+                        const content = document.createElement('div');
+                        content.className = 'space-y-2';
+                        content.innerHTML = data.analysis.obligations.party2.map(obligation => `
+                            <div class="bg-white shadow rounded p-3">
+                                ${obligation}
+                            </div>
+                        `).join('');
+                        party2Div.querySelector('.content-box').innerHTML = '';
+                        party2Div.querySelector('.content-box').appendChild(content);
+                    }
+                }
+
+                // Risks and Next Steps
                 const risksContent = document.getElementById('risksContent');
                 risksContent.innerHTML = '';
-                let allRisks = [
-                    ...(data.risk_analysis?.financial_risks || []).map(r => ({...r, type: 'Financial'})),
-                    ...(data.risk_analysis?.legal_risks || []).map(r => ({...r, type: 'Legal'})),
-                    ...(data.risk_analysis?.operational_risks || []).map(r => ({...r, type: 'Operational'}))
-                ];
-
-                allRisks.forEach(risk => {
-                    const div = document.createElement('div');
-                    div.className = 'bg-white shadow rounded-lg p-4';
-                    div.innerHTML = 
-                        <div class="flex justify-between items-start">
-                            <div class="font-medium">${risk.risk}</div>
-                            <div class="flex space-x-2">
+                if (data.analysis.risks) {
+                    data.analysis.risks.forEach(risk => {
+                        const div = document.createElement('div');
+                        div.className = 'bg-white shadow rounded-lg p-4';
+                        div.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <div class="font-medium">${risk.risk}</div>
                                 <span class="text-xs px-2 py-1 rounded ${getCategoryColor(risk.severity)}">
                                     ${risk.severity}
                                 </span>
-                                <span class="text-xs px-2 py-1 rounded bg-gray-100">
-                                    ${risk.type}
-                                </span>
                             </div>
-                        </div>
-                        <div class="text-gray-600 mt-2">${risk.source_clause || risk.mitigation_measures || ''}</div>
-                    ;
-                    risksContent.appendChild(div);
-                });
+                            <div class="mt-2 text-gray-600">${risk.basis}</div>
+                            ${risk.mitigation ? `
+                                <div class="mt-2 p-2 bg-blue-50 rounded">
+                                    <span class="font-medium">Mitigation:</span> ${risk.mitigation}
+                                </div>
+                            ` : ''}
+                        `;
+                        risksContent.appendChild(div);
+                    });
+                }
+
+                const nextStepsContent = document.getElementById('nextStepsContent');
+                nextStepsContent.innerHTML = '';
+                if (data.analysis.next_steps) {
+                    data.analysis.next_steps.forEach(step => {
+                        const div = document.createElement('div');
+                        div.className = 'bg-white shadow rounded-lg p-4';
+                        div.innerHTML = `
+                            <div class="font-medium">${step.action}</div>
+                            <div class="mt-1 text-sm">
+                                <span class="text-blue-600">Timeline:</span> ${step.timeline}
+                            </div>
+                            <div class="mt-1 text-sm">
+                                <span class="text-blue-600">Responsible:</span> ${step.responsible_party}
+                            </div>
+                        `;
+                        nextStepsContent.appendChild(div);
+                    });
+                }
 
                 resultsSection.classList.remove('hidden');
             } catch (error) {
@@ -470,7 +535,7 @@
 
                 showLoading(true, 'Getting answer...');
 
-                const response = await fetch(${BACKEND_URL}/ask, {
+                const response = await fetch(`${BACKEND_URL}/ask`, {
                     method: 'POST',
                     body: formData
                 });
@@ -483,10 +548,10 @@
                 
                 const qaElement = document.createElement('div');
                 qaElement.className = 'bg-white shadow rounded-lg p-4';
-                qaElement.innerHTML = 
+                qaElement.innerHTML = `
                     <div class="font-medium text-blue-600 mb-2">Q: ${question}</div>
-                    <div class="text-gray-600">A: ${data.answer}</div>
-                ;
+                    <div class="text-gray-600">${data.answer}</div>
+                `;
                 
                 const qaHistory = document.getElementById('qaHistory');
                 qaHistory.insertBefore(qaElement, qaHistory.firstChild);
