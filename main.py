@@ -186,6 +186,27 @@ Your response must strictly follow the given JSON format. Any deviation will cau
                 cleaned_response = cleaned_response[:-3]
             
             parsed_response = json.loads(cleaned_response)
+
+            # Ensure all necessary keys are present in the response, even if they are empty
+            parsed_response.setdefault("document_metadata", {}).setdefault("type", {
+                "primary": "",
+                "category": "",
+                "jurisdiction": ""
+            })
+            parsed_response.setdefault("document_metadata", {}).setdefault("matter_details", {
+                "case_reference": "",
+                "subject_matter": ""
+            })
+            parsed_response.setdefault("financial_structure", {}).setdefault("fee_arrangement", {
+                "base_rates": []
+            })
+            parsed_response.setdefault("key_dates", {}).setdefault("document_dates", [])
+            parsed_response.setdefault("critical_provisions", {}).setdefault("key_clauses", [])
+            parsed_response.setdefault("risk_analysis", {
+                "financial_risks": [],
+                "legal_risks": [],
+                "operational_risks": []
+            })
             
             parsed_response["analysis_metadata"] = {
                 "timestamp": datetime.datetime.now().isoformat(),
