@@ -61,7 +61,6 @@
                     <span class="text-gray-600" id="loadingText">Analyzing document...</span>
                 </div>
             </div>
-
             <!-- Results Section -->
             <div id="resultsSection" class="hidden">
                 <!-- Document Info Header -->
@@ -129,8 +128,6 @@
                                     data-tab="risks">Risks & Analysis</button>
                             <button class="tab-button px-3 py-2 text-sm font-medium" 
                                     data-tab="qa">Q&A</button>
-                            <button class="tab-button px-3 py-2 text-sm font-medium" 
-                                    data-tab="recommendations">Next Steps & Recommendations</button>
                         </nav>
                     </div>
 
@@ -197,14 +194,6 @@
                                 <div id="qaHistory" class="space-y-4 content-box"></div>
                             </div>
                         </div>
-
-                        <!-- Recommendations Tab -->
-                        <div id="recommendations-tab" class="tab-content hidden">
-                            <div class="space-y-4">
-                                <h3 class="text-lg font-semibold">Next Steps & Recommendations</h3>
-                                <div id="recommendationsContent" class="space-y-4 content-box"></div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -253,8 +242,8 @@
                 if (file.type === 'application/pdf') {
                     currentFile = file;
                     analyzeBtn.disabled = false;
-                    dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
-                    document.getElementById('fileSize').textContent = `Size: ${formatFileSize(file.size)}`;
+                    dropZone.querySelector('p').textContent = Selected: ${file.name};
+                    document.getElementById('fileSize').textContent = Size: ${formatFileSize(file.size)};
                 } else {
                     alert('Please upload a PDF file');
                     fileInput.value = '';
@@ -286,8 +275,8 @@
                 if (file.type === 'application/pdf') {
                     currentFile = file;
                     analyzeBtn.disabled = false;
-                    dropZone.querySelector('p').textContent = `Selected: ${file.name}`;
-                    document.getElementById('fileSize').textContent = `Size: ${formatFileSize(file.size)}`;
+                    dropZone.querySelector('p').textContent = Selected: ${file.name};
+                    document.getElementById('fileSize').textContent = Size: ${formatFileSize(file.size)};
                 } else {
                     alert('Please upload a PDF file');
                 }
@@ -305,7 +294,7 @@
                 });
 
                 button.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
-                document.getElementById(`${button.dataset.tab}-tab`).classList.remove('hidden');
+                document.getElementById(${button.dataset.tab}-tab).classList.remove('hidden');
             });
         });
 
@@ -320,7 +309,7 @@
                 const formData = new FormData();
                 formData.append('file', currentFile);
 
-                const response = await fetch(`${BACKEND_URL}/analyze`, {
+                const response = await fetch(${BACKEND_URL}/analyze, {
                     method: 'POST',
                     body: formData
                 });
@@ -336,9 +325,6 @@
                 document.getElementById('docCategory').textContent = data.document_metadata.type.category;
                 document.getElementById('docJurisdiction').textContent = data.document_metadata.jurisdiction.state;
                 document.getElementById('docMatter').textContent = data.document_metadata.matter_details.case_reference;
-                document.getElementById('governingLaw').textContent = data.document_metadata.type.governing_law;
-                document.getElementById('docSubject').textContent = data.document_metadata.matter_details.subject_matter;
-                document.getElementById('docPurpose').textContent = data.document_metadata.matter_details.purpose;
 
                 // Parties
                 const partiesList = document.getElementById('docParties');
@@ -347,7 +333,7 @@
                     data.document_metadata.parties.primary_parties.forEach(party => {
                         const div = document.createElement('div');
                         div.className = 'text-sm p-2 bg-blue-50 rounded';
-                        div.textContent = `${party.name} (${party.role})`;
+                        div.textContent = ${party.name} (${party.role});
                         partiesList.appendChild(div);
                     });
                 }
@@ -377,7 +363,7 @@
                     data.financial_structure.fee_arrangement.base_rates.forEach(rate => {
                         const div = document.createElement('div');
                         div.className = 'bg-white shadow rounded-lg p-4';
-                        div.innerHTML = `
+                        div.innerHTML = 
                             <div class="flex justify-between items-start">
                                 <div class="font-medium">${rate.person}</div>
                                 <span class="text-xs px-2 py-1 rounded bg-green-100 text-green-800">
@@ -386,7 +372,7 @@
                             </div>
                             <div class="text-gray-600 mt-1">Rate: ${rate.rate}</div>
                             <div class="text-gray-500 mt-1">${rate.conditions || ''}</div>
-                        `;
+                        ;
                         keyTermsContent.appendChild(div);
                     });
                 }
@@ -398,7 +384,7 @@
                     data.key_dates.document_dates.forEach(date => {
                         const div = document.createElement('div');
                         div.className = 'bg-white shadow rounded-lg p-4';
-                        div.innerHTML = `
+                        div.innerHTML = 
                             <div class="flex justify-between items-start">
                                 <div class="font-medium">${date.event}</div>
                                 <span class="text-xs px-2 py-1 rounded ${getCategoryColor(date.significance)}">
@@ -407,7 +393,7 @@
                             </div>
                             <div class="text-gray-600 mt-1">${date.date}</div>
                             <div class="text-sm mt-1">${date.details}</div>
-                        `;
+                        ;
                         datesContent.appendChild(div);
                     });
                 }
@@ -419,12 +405,12 @@
                     data.critical_provisions.key_clauses.forEach(clause => {
                         const div = document.createElement('div');
                         div.className = 'bg-white shadow rounded-lg p-4';
-                        div.innerHTML = `
+                        div.innerHTML = 
                             <div class="font-medium">${clause.title}</div>
                             <div class="text-gray-600 mt-2">${clause.content}</div>
                             <div class="text-blue-600 mt-2 text-sm">${clause.significance}</div>
-                            ${clause.reference ? `<div class="text-gray-500 mt-1 text-sm">Section: ${clause.reference}</div>` : ''}
-                        `;
+                            ${clause.reference ? <div class="text-gray-500 mt-1 text-sm">Section: ${clause.reference}</div> : ''}
+                        ;
                         provisionsContent.appendChild(div);
                     });
                 }
@@ -441,7 +427,7 @@
                 allRisks.forEach(risk => {
                     const div = document.createElement('div');
                     div.className = 'bg-white shadow rounded-lg p-4';
-                    div.innerHTML = `
+                    div.innerHTML = 
                         <div class="flex justify-between items-start">
                             <div class="font-medium">${risk.risk}</div>
                             <div class="flex space-x-2">
@@ -454,26 +440,9 @@
                             </div>
                         </div>
                         <div class="text-gray-600 mt-2">${risk.source_clause || risk.mitigation_measures || ''}</div>
-                    `;
+                    ;
                     risksContent.appendChild(div);
                 });
-
-                // Recommendations
-                const recommendationsContent = document.getElementById('recommendationsContent');
-                recommendationsContent.innerHTML = '';
-                if (data.next_steps_and_recommendations?.immediate_actions) {
-                    data.next_steps_and_recommendations.immediate_actions.forEach(action => {
-                        const div = document.createElement('div');
-                        div.className = 'bg-white shadow rounded-lg p-4';
-                        div.innerHTML = `
-                            <div class="font-medium">Action: ${action.action}</div>
-                            <div class="text-gray-600 mt-2">Deadline: ${action.deadline}</div>
-                            <div class="text-sm mt-1">Responsible: ${action.responsibility}</div>
-                            <div class="text-sm mt-1">Details: ${action.details}</div>
-                        `;
-                        recommendationsContent.appendChild(div);
-                    });
-                }
 
                 resultsSection.classList.remove('hidden');
             } catch (error) {
@@ -501,7 +470,7 @@
 
                 showLoading(true, 'Getting answer...');
 
-                const response = await fetch(`${BACKEND_URL}/ask`, {
+                const response = await fetch(${BACKEND_URL}/ask, {
                     method: 'POST',
                     body: formData
                 });
@@ -514,10 +483,10 @@
                 
                 const qaElement = document.createElement('div');
                 qaElement.className = 'bg-white shadow rounded-lg p-4';
-                qaElement.innerHTML = `
+                qaElement.innerHTML = 
                     <div class="font-medium text-blue-600 mb-2">Q: ${question}</div>
                     <div class="text-gray-600">A: ${data.answer}</div>
-                `;
+                ;
                 
                 const qaHistory = document.getElementById('qaHistory');
                 qaHistory.insertBefore(qaElement, qaHistory.firstChild);
