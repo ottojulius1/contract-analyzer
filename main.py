@@ -88,7 +88,7 @@ def process_chunk_with_retry(chunk: str, system_message: str, attempt: int = 0) 
 return None
 
 def create_analysis_prompt(text: str) -> str:
-    base_prompt = f"""Analyze this document section and provide information in this exact format:
+    prompt = f'''You are a legal expert. Analyze this document section and provide information in this exact format:
 
 {{
     "document_type": {{
@@ -144,10 +144,8 @@ def create_analysis_prompt(text: str) -> str:
     }}
 }}
 
-Analyze this section: 
-
-{text}"""
-    return base_prompt
+Document text to analyze: {text}'''
+    return prompt
 {{
     "document_type": {{
         "type": "Document type",
