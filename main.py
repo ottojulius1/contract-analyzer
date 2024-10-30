@@ -160,8 +160,7 @@ def merge_analyses(analyses: List[Dict]) -> Dict:
                         if not (json.dumps(item) in seen or seen.update({json.dumps(item): None}))
                     ]
     
-    return merged
-   def create_analysis_prompt(text: str) -> str:
+    return mergeddef create_analysis_prompt(text: str) -> str:
     base_prompt = """You are a highly experienced legal professional conducting a thorough document analysis. Think like both an expert lawyer and a client advocate. Your analysis must be comprehensive, detailed, and insightful.
 
 ANALYSIS APPROACH:
@@ -196,7 +195,7 @@ Required Analysis Structure:
                 "authority": "Authority/capacity in which they act"
             }
         ],
-        "matter_info": {
+"matter_info": {
             "subject": "Specific subject matter",
             "purpose": "Document's primary purpose",
             "scope": {
@@ -233,7 +232,7 @@ Required Analysis Structure:
                 "recommendations": ["Suggested approaches"]
             }
         ],
-        "critical_elements": [
+"critical_elements": [
             {
                 "element": "Critical component",
                 "importance": "Why it's critical",
@@ -273,7 +272,7 @@ Required Analysis Structure:
                 "source": "Section reference"
             }
         ],
-        "legal_terms": [
+"legal_terms": [
             {
                 "term": "Legal requirement",
                 "explanation": "Plain language explanation",
@@ -323,7 +322,7 @@ Required Analysis Structure:
                 "consequences": "Results of non-compliance"
             }
         ],
-    "conditional_deadlines": [
+"conditional_deadlines": [
             {
                 "trigger": "What triggers the deadline",
                 "timeline": "When it must be done",
@@ -373,7 +372,7 @@ Required Analysis Structure:
                 "source": "Section reference"
             }
         ],
-        "mutual_obligations": [
+"mutual_obligations": [
             {
                 "obligation": "Shared requirement",
                 "parties_involved": ["List parties"],
@@ -424,7 +423,7 @@ Required Analysis Structure:
                 "source": "Section reference"
             }
         ],
-        "procedural_requirements": [
+"procedural_requirements": [
             {
                 "procedure": "What must be done",
                 "steps": ["Specific steps required"],
@@ -481,7 +480,7 @@ Required Analysis Structure:
                 "source": "Section reference"
             }
         ],
-        "practical_risks": [
+"practical_risks": [
             {
                 "risk": "Real-world risk",
                 "context": "When it might occur",
@@ -524,7 +523,7 @@ Required Analysis Structure:
                 "source": "Section reference"
             }
         ],
-    "potential_issues": [
+"potential_issues": [
             {
                 "issue": "Potential problem",
                 "context": "When it might arise",
@@ -560,7 +559,7 @@ Required Analysis Structure:
             }
         ]
     },
-    "professional_obligations": {
+"professional_obligations": {
         "attorney_obligations": [
             {
                 "obligation": "Specific duty",
@@ -594,43 +593,6 @@ Required Analysis Structure:
                 "best_practices": "How to handle",
                 "documentation": "Required records",
                 "source": "Section reference"
-            }
-        ]
-    },
-    "next_steps_and_recommendations": {
-        "immediate_actions": [
-            {
-                "action": "What to do",
-                "deadline": "When to do it",
-                "responsibility": "Who does it",
-                "details": "How to do it",
-                "importance": "Why it's urgent",
-                "prerequisites": "What's needed first",
-                "verification": "How to confirm completion",
-                "documentation": "Required records"
-            }
-        ],
-        "monitoring_requirements": [
-            {
-                "item": "What to monitor",
-                "frequency": "How often",
-                "method": "How to track",
-                "responsible_party": "Who monitors",
-                "indicators": "What to watch for",
-                "reporting": "How to report",
-                "response_plan": "What to do if issues arise",
-                "documentation": "Required records"
-            }
-        ],
-        "best_practices": [
-            {
-                "practice": "Recommended approach",
-                "rationale": "Why recommended",
-                "implementation": "How to implement",
-                "timing": "When to implement",
-                "resources": "What's needed",
-                "benefits": "Expected benefits",
-                "measures": "How to measure success"
             }
         ]
     }
