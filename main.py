@@ -91,59 +91,59 @@ def create_analysis_prompt(text: str) -> str:
     """Create a minimal but effective analysis prompt."""
     base_prompt = '''You are a legal expert. Analyze this document section and provide information in this exact format:
 
-    {
-        "document_type": {
-            "type": "Document type",
-            "category": "Category",
-            "jurisdiction": "Jurisdiction",
-            "matter": "Subject matter",
-            "parties": [
-                { "name": "Party name", "role": "Party role" }
-            ]
-        },
-        "analysis": {
-            "summary": "Brief but detailed section summary",
-            "key_terms": [
-                {
-                    "term": "Key term found",
-                    "content": "Brief description",
-                    "category": "FINANCIAL/LEGAL/OPERATIONAL",
-                    "location": "Section reference"
-                }
-            ],
-            "dates_and_deadlines": [
-                {
-                    "date": "Specific date",
-                    "event": "What happens",
-                    "details": "Important details"
-                }
-            ],
-            "key_provisions": [
-                {
-                    "title": "Provision name",
-                    "text": "Brief quote",
-                    "significance": "Why important"
-                }
-            ],
-            "risks": [
-                {
-                    "risk": "Risk identified",
-                    "severity": "HIGH/MEDIUM/LOW",
-                    "basis": "Why this is a risk"
-                }
-            ],
-            "next_steps": [
-                {
-                    "action": "What needs to be done",
-                    "timeline": "When to do it"
-                }
-            ],
-            "obligations": {
-                "party1": [],
-                "party2": []
+{
+    "document_type": {
+        "type": "Document type",
+        "category": "Category",
+        "jurisdiction": "Jurisdiction",
+        "matter": "Subject matter",
+        "parties": [
+            { "name": "Party name", "role": "Party role" }
+        ]
+    },
+    "analysis": {
+        "summary": "Brief but detailed section summary",
+        "key_terms": [
+            {
+                "term": "Key term found",
+                "content": "Brief description",
+                "category": "FINANCIAL/LEGAL/OPERATIONAL",
+                "location": "Section reference"
             }
+        ],
+        "dates_and_deadlines": [
+            {
+                "date": "Specific date",
+                "event": "What happens",
+                "details": "Important details"
+            }
+        ],
+        "key_provisions": [
+            {
+                "title": "Provision name",
+                "text": "Brief quote",
+                "significance": "Why important"
+            }
+        ],
+        "risks": [
+            {
+                "risk": "Risk identified",
+                "severity": "HIGH/MEDIUM/LOW",
+                "basis": "Why this is a risk"
+            }
+        ],
+        "next_steps": [
+            {
+                "action": "What needs to be done",
+                "timeline": "When to do it"
+            }
+        ],
+        "obligations": {
+            "party1": [],
+            "party2": []
         }
-    }'''
+    }
+}'''
 
     return base_prompt + "\n\nDocument text to analyze:\n" + text
 {{
