@@ -144,7 +144,6 @@ def create_analysis_prompt(text: str) -> str:
         }
     }
 }'''
-
     return base_prompt + "\n\nDocument text to analyze:\n" + text
 {{
     "document_type": {{
