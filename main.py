@@ -198,7 +198,7 @@ def create_analysis_prompt(text: str) -> str:
 "party2": []
         }}
     }}
-}}"""
+}}'''
     return base_prompt + text
 
 def merge_analyses(analyses: List[Dict]) -> Dict:
