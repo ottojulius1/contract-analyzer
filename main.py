@@ -195,7 +195,7 @@ Document text to analyze: {text}'''
         ],
         "obligations": {{
             "party1": [],
-"party2": []
+            "party2": []
         }}
     }}
 }}
