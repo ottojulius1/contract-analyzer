@@ -143,7 +143,7 @@ def create_analysis_prompt(text: str) -> str:
             "party2": []
         }
     }
-}
+}'''
     return base_prompt + "\n\nDocument text to analyze:\n" + text
 {{
     "document_type": {{
@@ -197,7 +197,7 @@ def create_analysis_prompt(text: str) -> str:
 "party2": []
         }}
     }}
-}}'''
+}}
     return base_prompt + text
 
 def merge_analyses(analyses: List[Dict]) -> Dict:
