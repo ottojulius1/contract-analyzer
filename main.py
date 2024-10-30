@@ -114,7 +114,7 @@ def create_analysis_prompt(text: str) -> str:
         }}
     }}
 
-    Section to analyze:
+    "Section to analyze:"
     {text}
     """
 {{
