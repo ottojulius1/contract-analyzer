@@ -202,6 +202,7 @@ Document text to analyze: {text}'''
     return base_prompt + text
 
 def merge_analyses(analyses: List[Dict]) -> Dict:
+
     """Merge analyses while avoiding duplicates."""
     merged = {
         "document_type": {
