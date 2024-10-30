@@ -195,12 +195,11 @@ Document text to analyze: {text}'''
         ],
         "obligations": {{
             "party1": [],
-            "party2": []
+"party2": []
         }}
     }}
-}}
-
-Analyze this text: {text}"""
+}}"""
+    return base_prompt + text
 
 def merge_analyses(analyses: List[Dict]) -> Dict:
     """Merge analyses while avoiding duplicates."""
