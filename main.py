@@ -85,38 +85,67 @@ def process_chunk_with_retry(chunk: str, system_message: str, attempt: int = 0) 
         logger.error(f"Error processing chunk (attempt {attempt + 1}): {str(e)}")
         if attempt < max_attempts - 1:
             return process_chunk_with_retry(chunk, system_message, attempt + 1)
-        return None
-def create_analysis_prompt(text: str) -> str:
-    """Create a minimal but effective analysis prompt."""
-    return f"""Analyze this document section and provide information in this exact format:
+        return Nonedef create_analysis_prompt(text: str) -> str:
+    base_prompt = f"""Analyze this document section and provide information in this exact format:
 
-    {{
-        "document_type": {{
-            "type": "Document type (e.g., Contract, Agreement, etc.)",
-            "category": "Legal category",
-            "jurisdiction": "Governing jurisdiction",
-            "matter": "Subject matter",
-            "parties": [
-                {{
-                    "name": "Party name",
-                    "role": "Party role"
-                }}
-            ]
-        }},
-        "analysis": {{
-            "summary": "Summary of the document section",
-            "key_terms": [
-                {{
-                    "term": "Important term",
-                    "definition": "Definition or context of the term"
-                }}
-            ]
+{{
+    "document_type": {{
+        "type": "Document type",
+        "category": "Category",
+        "jurisdiction": "Jurisdiction",
+        "matter": "Subject matter",
+        "parties": [
+            {{ "name": "Party name", "role": "Party role" }}
+        ]
+    }},
+    "analysis": {{
+        "summary": "Brief but detailed section summary",
+        "key_terms": [
+            {{
+                "term": "Key term found",
+                "content": "Brief description",
+                "category": "FINANCIAL/LEGAL/OPERATIONAL",
+                "location": "Section reference"
+            }}
+        ],
+        "dates_and_deadlines": [
+            {{
+                "date": "Specific date",
+                "event": "What happens",
+                "details": "Important details"
+            }}
+        ],
+        "key_provisions": [
+            {{
+                "title": "Provision name",
+                "text": "Brief quote",
+                "significance": "Why important"
+            }}
+        ],
+        "risks": [
+            {{
+                "risk": "Risk identified",
+                "severity": "HIGH/MEDIUM/LOW",
+                "basis": "Why this is a risk"
+            }}
+        ],
+        "next_steps": [
+            {{
+                "action": "What needs to be done",
+                "timeline": "When to do it"
+            }}
+        ],
+        "obligations": {{
+            "party1": [],
+            "party2": []
         }}
     }}
+}}
 
-    "Section to analyze:"
-    {text}
-    """
+Analyze this section: 
+
+{text}"""
+    return base_prompt
 {{
     "document_type": {{
         "type": "Document type",
