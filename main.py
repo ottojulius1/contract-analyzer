@@ -145,7 +145,7 @@ def create_analysis_prompt(text: str) -> str:
     }
 }'''
 
-    # The return statement should be at the same level as the rest of the function
+    # Correct indentation here for the return statement
     return base_prompt + "\n\nDocument text to analyze:\n" + text
 {{
     "document_type": {{
