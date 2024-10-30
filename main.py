@@ -86,9 +86,9 @@ def process_chunk_with_retry(chunk: str, system_message: str, attempt: int = 0) 
         if attempt < max_attempts - 1:
             return process_chunk_with_retry(chunk, system_message, attempt + 1)
         return None
-        def create_analysis_prompt(text: str) -> str:
-    """Create a minimal but effective analysis prompt."""
-    return f"""Analyze this document section and provide information in this exact format:
+    def create_analysis_prompt(text: str) -> str:
+        """Create a minimal but effective analysis prompt."""
+        return f"""Analyze this document section and provide information in this exact format:
 
 {{
     "document_type": {{
