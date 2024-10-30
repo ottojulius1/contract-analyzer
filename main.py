@@ -160,7 +160,8 @@ def merge_analyses(analyses: List[Dict]) -> Dict:
                         if not (json.dumps(item) in seen or seen.update({json.dumps(item): None}))
                     ]
     
-    return mergeddef create_analysis_prompt(text: str) -> str:
+    return merged
+def create_analysis_prompt(text: str) -> str:
     base_prompt = """You are a highly experienced legal professional conducting a thorough document analysis. Think like both an expert lawyer and a client advocate. Your analysis must be comprehensive, detailed, and insightful.
 
 ANALYSIS APPROACH:
