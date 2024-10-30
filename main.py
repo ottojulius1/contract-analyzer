@@ -91,7 +91,7 @@ def create_analysis_prompt(text: str) -> str:
     """Create a minimal but effective analysis prompt."""
     base_prompt = '''You are a legal expert. Analyze this document section and provide information in this exact format:
 
-{
+    {
     "document_type": {
         "type": "Document type",
         "category": "Category",
