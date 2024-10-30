@@ -31,8 +31,8 @@ def num_tokens_from_string(string: str) -> int:
     # Rough estimation: 1 token ≈ 4 characters for English text
     return len(string) // 4
 
-def chunk_document(text: str, max_tokens: int = 6000) -> List[str]:
-    """Split document into chunks that fit within token limits."""
+def chunk_document(text: str, max_tokens: int = 3000) -> List[str]:
+    """Split document into smaller chunks that fit within token limits."""
     chunks = []
     current_chunk = ""
     current_tokens = 0
@@ -61,6 +61,84 @@ def chunk_document(text: str, max_tokens: int = 6000) -> List[str]:
     
     return chunks
 
+def create_analysis_prompt(text: str) -> str:
+    base_prompt = """You are a highly experienced legal professional. Analyze this document section and provide key information in the following structure:
+
+{
+    "document_type": {
+        "type": "Document type (e.g., Contract, Agreement, etc.)",
+        "category": "Legal category",
+        "jurisdiction": "Governing jurisdiction",
+        "matter": "Subject matter",
+        "parties": [
+            {
+                "name": "Party name",
+                "role": "Party role"
+            }
+        ]
+    },
+    "analysis": {
+        "summary": "Clear, detailed explanation of this section",
+        "key_terms": [
+            {
+                "term": "Important term",
+                "content": "Exact quote or description",
+                "category": "FINANCIAL/LEGAL/OPERATIONAL",
+                "value": "Monetary value if applicable",
+                "location": "Section reference"
+            }
+        ],
+"dates_and_deadlines": [
+            {
+                "event": "Important date/deadline",
+                "date": "Specific date or timeline",
+                "details": "What needs to be done",
+                "significance": "HIGH/MEDIUM/LOW"
+            }
+        ],
+        "key_provisions": [
+            {
+                "title": "Provision name",
+                "text": "Exact quote",
+                "significance": "Why it's important",
+                "location": "Section reference"
+            }
+        ],
+        "risks": [
+            {
+                "risk": "Identified risk",
+                "severity": "HIGH/MEDIUM/LOW",
+                "basis": "Why this is a risk",
+                "mitigation": "How to address"
+            }
+        ],
+        "next_steps": [
+            {
+                "action": "Required action",
+                "timeline": "When it needs to be done",
+                "responsible_party": "Who needs to do it"
+            }
+        ],
+        "obligations": {
+            "party1": ["List of obligations"],
+            "party2": ["List of obligations"]
+        }
+    }
+}
+
+Provide SPECIFIC analysis with:
+1. Actual quotes from the document
+2. Section references
+3. Explicit and implicit obligations
+4. Unusual or non-standard terms
+5. Complex concepts explained simply
+6. Practical implications
+7. Time-sensitive requirements
+
+Analyze this section of the document:
+
+"""
+    return base_prompt + text
 def merge_analyses(analyses: List[Dict]) -> Dict:
     """Merge multiple chunk analyses into a single coherent analysis."""
     merged = {
@@ -71,62 +149,17 @@ def merge_analyses(analyses: List[Dict]) -> Dict:
             "matter": "",
             "parties": []
         },
-        "document_profile": {
-            "classification": {},
-            "parties": [],
-            "matter_info": {}
-        },
-        "comprehensive_summary": {
-            "executive_brief": "",
-            "key_points": [],
-            "unusual_aspects": [],
-            "critical_elements": []
-        },
-        "key_terms_analysis": {
-            "financial_terms": [],
-            "operational_terms": [],
-            "legal_terms": [],
-            "defined_terms": []
-        },
-        "critical_dates_deadlines": {
-            "immediate_deadlines": [],
-            "recurring_obligations": [],
-            "conditional_deadlines": [],
-            "key_dates": []
-        },
-        "rights_and_obligations": {
-            "party_rights": [],
-            "party_obligations": [],
-            "mutual_obligations": [],
-            "conditional_obligations": []
-        },
-        "key_provisions_analysis": {
-            "essential_clauses": [],
-            "protective_clauses": [],
-            "procedural_requirements": [],
-            "termination_provisions": []
-        },
-        "comprehensive_risk_analysis": {
-            "contractual_risks": [],
-            "compliance_risks": [],
-            "practical_risks": [],
-            "relationship_risks": []
-        },
-        "special_considerations": {
-            "unique_features": [],
-            "potential_issues": [],
-            "practice_tips": [],
-            "industry_specific": []
-        },
-        "professional_obligations": {
-            "attorney_obligations": [],
-            "client_obligations": [],
-            "ethical_considerations": []
-        },
-        "next_steps_and_recommendations": {
-            "immediate_actions": [],
-            "monitoring_requirements": [],
-            "best_practices": []
+        "analysis": {
+            "summary": "",
+            "key_terms": [],
+            "dates_and_deadlines": [],
+            "key_provisions": [],
+            "risks": [],
+            "next_steps": [],
+            "obligations": {
+                "party1": [],
+                "party2": []
+            }
         }
     }
     
@@ -137,31 +170,42 @@ def merge_analyses(analyses: List[Dict]) -> Dict:
             if not merged["document_type"]["type"]:
                 merged["document_type"].update(analysis["document_type"])
         
-        # Merge each major section
-        for section in merged.keys():
-            if section in analysis and section != "document_type":
-                curr_section = analysis[section]
-                if isinstance(curr_section, dict):
-                    for subsection in curr_section:
-                        if isinstance(curr_section[subsection], list):
-                            merged[section][subsection].extend(curr_section[subsection])
-                        elif not merged[section][subsection]:  # For non-list fields, take first non-empty value
-                            merged[section][subsection] = curr_section[subsection]
+        # Update analysis sections
+        if "analysis" in analysis:
+            curr_analysis = analysis["analysis"]
+            
+            # Merge lists
+            for key in ["key_terms", "dates_and_deadlines", "key_provisions", "risks", "next_steps"]:
+                if key in curr_analysis:
+                    merged["analysis"][key].extend(curr_analysis[key])
+            
+            # Merge obligations
+            if "obligations" in curr_analysis:
+                if "party1" in curr_analysis["obligations"]:
+                    merged["analysis"]["obligations"]["party1"].extend(
+                        curr_analysis["obligations"]["party1"]
+                    )
+                if "party2" in curr_analysis["obligations"]:
+                    merged["analysis"]["obligations"]["party2"].extend(
+                        curr_analysis["obligations"]["party2"]
+                    )
     
     # Remove duplicates while preserving order
-    for section in merged.keys():
-        if isinstance(merged[section], dict):
-            for subsection, content in merged[section].items():
-                if isinstance(content, list):
-                    # Convert each item to a string for comparison, but keep original items
-                    seen = {}
-                    merged[section][subsection] = [
-                        item for item in content
-                        if not (json.dumps(item) in seen or seen.update({json.dumps(item): None}))
-                    ]
+    for key in ["key_terms", "dates_and_deadlines", "key_provisions", "risks", "next_steps"]:
+        merged["analysis"][key] = list({
+            json.dumps(item): item 
+            for item in merged["analysis"][key]
+        }.values())
     
-    return merged
-def create_analysis_prompt(text: str) -> str:
+    # Remove duplicates from obligations
+    merged["analysis"]["obligations"]["party1"] = list(dict.fromkeys(
+        merged["analysis"]["obligations"]["party1"]
+    ))
+    merged["analysis"]["obligations"]["party2"] = list(dict.fromkeys(
+        merged["analysis"]["obligations"]["party2"]
+    ))
+    
+    return mergeddef create_analysis_prompt(text: str) -> str:
     base_prompt = """You are a highly experienced legal professional conducting a thorough document analysis. Think like both an expert lawyer and a client advocate. Your analysis must be comprehensive, detailed, and insightful.
 
 ANALYSIS APPROACH:
