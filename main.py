@@ -8,7 +8,7 @@ import os
 import json
 import logging
 import datetime
-import re
+import time
 from typing import Dict, List, Optional, Union
 
 logging.basicConfig(level=logging.DEBUG)
@@ -28,25 +28,22 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def num_tokens_from_string(string: str) -> int:
     """Estimate the number of tokens in a string."""
-    # Rough estimation: 1 token ≈ 4 characters for English text
-    return len(string) // 4
+    return len(string.split()) + len(string) // 4
 
-def chunk_document(text: str, max_tokens: int = 3000) -> List[str]:
-    """Split document into smaller chunks that fit within token limits."""
+def chunk_document(text: str, max_tokens: int = 1500) -> List[str]:
+    """Split document into very small chunks to avoid token limits."""
     chunks = []
+    paragraphs = text.split('\n\n')
     current_chunk = ""
     current_tokens = 0
-    
-    # Split by paragraphs
-    paragraphs = text.split('\n\n')
     
     for paragraph in paragraphs:
         paragraph_tokens = num_tokens_from_string(paragraph)
         
-        # If this paragraph would exceed the limit, start a new chunk
+        # If adding this paragraph would exceed the limit
         if current_tokens + paragraph_tokens > max_tokens:
             if current_chunk:
-                chunks.append(current_chunk)
+                chunks.append(current_chunk.strip())
             current_chunk = paragraph
             current_tokens = paragraph_tokens
         else:
@@ -55,92 +52,103 @@ def chunk_document(text: str, max_tokens: int = 3000) -> List[str]:
             current_chunk += paragraph
             current_tokens += paragraph_tokens
     
-    # Add the last chunk if it exists
     if current_chunk:
-        chunks.append(current_chunk)
+        chunks.append(current_chunk.strip())
     
     return chunks
 
-def create_analysis_prompt(text: str) -> str:
-    base_prompt = """You are a highly experienced legal professional. Analyze this document section and provide key information in the following structure:
+def process_chunk_with_retry(chunk: str, system_message: str, attempt: int = 0) -> Optional[Dict]:
+    """Process a chunk with retry logic and rate limiting."""
+    max_attempts = 3
+    try:
+        # Add delay between attempts
+        if attempt > 0:
+            time.sleep(attempt * 2)
 
-{
-    "document_type": {
-        "type": "Document type (e.g., Contract, Agreement, etc.)",
-        "category": "Legal category",
-        "jurisdiction": "Governing jurisdiction",
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": create_analysis_prompt(chunk)}
+            ],
+            temperature=0.1,
+            max_tokens=1000
+        )
+        
+        try:
+            return json.loads(response.choices[0].message.content)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parsing error: {e}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error processing chunk (attempt {attempt + 1}): {str(e)}")
+        if attempt < max_attempts - 1:
+            return process_chunk_with_retry(chunk, system_message, attempt + 1)
+        return None
+        def create_analysis_prompt(text: str) -> str:
+    """Create a minimal but effective analysis prompt."""
+    return f"""Analyze this document section and provide information in this exact format:
+
+{{
+    "document_type": {{
+        "type": "Document type",
+        "category": "Category",
+        "jurisdiction": "Jurisdiction",
         "matter": "Subject matter",
         "parties": [
-            {
-                "name": "Party name",
-                "role": "Party role"
-            }
+            {{ "name": "Party name", "role": "Party role" }}
         ]
-    },
-    "analysis": {
-        "summary": "Clear, detailed explanation of this section",
+    }},
+    "analysis": {{
+        "summary": "Brief but detailed section summary",
         "key_terms": [
-            {
-                "term": "Important term",
-                "content": "Exact quote or description",
+            {{
+                "term": "Key term found",
+                "content": "Brief description",
                 "category": "FINANCIAL/LEGAL/OPERATIONAL",
-                "value": "Monetary value if applicable",
                 "location": "Section reference"
-            }
+            }}
         ],
-"dates_and_deadlines": [
-            {
-                "event": "Important date/deadline",
-                "date": "Specific date or timeline",
-                "details": "What needs to be done",
-                "significance": "HIGH/MEDIUM/LOW"
-            }
+        "dates_and_deadlines": [
+            {{
+                "date": "Specific date",
+                "event": "What happens",
+                "details": "Important details"
+            }}
         ],
         "key_provisions": [
-            {
+            {{
                 "title": "Provision name",
-                "text": "Exact quote",
-                "significance": "Why it's important",
-                "location": "Section reference"
-            }
+                "text": "Brief quote",
+                "significance": "Why important"
+            }}
         ],
         "risks": [
-            {
-                "risk": "Identified risk",
+            {{
+                "risk": "Risk identified",
                 "severity": "HIGH/MEDIUM/LOW",
-                "basis": "Why this is a risk",
-                "mitigation": "How to address"
-            }
+                "basis": "Why this is a risk"
+            }}
         ],
         "next_steps": [
-            {
-                "action": "Required action",
-                "timeline": "When it needs to be done",
-                "responsible_party": "Who needs to do it"
-            }
+            {{
+                "action": "What needs to be done",
+                "timeline": "When to do it"
+            }}
         ],
-        "obligations": {
-            "party1": ["List of obligations"],
-            "party2": ["List of obligations"]
-        }
-    }
-}
+        "obligations": {{
+            "party1": [],
+            "party2": []
+        }}
+    }}
+}}
 
-Provide SPECIFIC analysis with:
-1. Actual quotes from the document
-2. Section references
-3. Explicit and implicit obligations
-4. Unusual or non-standard terms
-5. Complex concepts explained simply
-6. Practical implications
-7. Time-sensitive requirements
+Section to analyze:
+{text}"""
 
-Analyze this section of the document:
-
-"""
-    return base_prompt + text
 def merge_analyses(analyses: List[Dict]) -> Dict:
-    """Merge multiple chunk analyses into a single coherent analysis."""
+    """Merge analyses while avoiding duplicates."""
     merged = {
         "document_type": {
             "type": "",
@@ -162,509 +170,47 @@ def merge_analyses(analyses: List[Dict]) -> Dict:
             }
         }
     }
-    
-    # Combine analyses from different chunks
+    # Update document type from first valid analysis
     for analysis in analyses:
-        # Update document type if found
-        if analysis.get("document_type"):
-            if not merged["document_type"]["type"]:
-                merged["document_type"].update(analysis["document_type"])
-        
-        # Update analysis sections
-        if "analysis" in analysis:
-            curr_analysis = analysis["analysis"]
-            
-            # Merge lists
-            for key in ["key_terms", "dates_and_deadlines", "key_provisions", "risks", "next_steps"]:
-                if key in curr_analysis:
-                    merged["analysis"][key].extend(curr_analysis[key])
-            
-            # Merge obligations
-            if "obligations" in curr_analysis:
-                if "party1" in curr_analysis["obligations"]:
-                    merged["analysis"]["obligations"]["party1"].extend(
-                        curr_analysis["obligations"]["party1"]
-                    )
-                if "party2" in curr_analysis["obligations"]:
-                    merged["analysis"]["obligations"]["party2"].extend(
-                        curr_analysis["obligations"]["party2"]
-                    )
+        if analysis and analysis.get("document_type"):
+            merged["document_type"].update(analysis["document_type"])
+            if analysis["document_type"].get("parties"):
+                merged["document_type"]["parties"] = analysis["document_type"]["parties"]
+            break
     
-    # Remove duplicates while preserving order
+    # Merge all analyses
+    summaries = []
+    for analysis in analyses:
+        if not analysis or "analysis" not in analysis:
+            continue
+            
+        curr = analysis["analysis"]
+        summaries.append(curr.get("summary", ""))
+        
+        for key in ["key_terms", "dates_and_deadlines", "key_provisions", "risks", "next_steps"]:
+            if key in curr and curr[key]:
+                merged["analysis"][key].extend(curr[key])
+        
+        if "obligations" in curr:
+            if curr["obligations"].get("party1"):
+                merged["analysis"]["obligations"]["party1"].extend(curr["obligations"]["party1"])
+            if curr["obligations"].get("party2"):
+                merged["analysis"]["obligations"]["party2"].extend(curr["obligations"]["party2"])
+    
+    # Combine summaries
+    merged["analysis"]["summary"] = " ".join(summaries)
+    
+    # Remove duplicates
     for key in ["key_terms", "dates_and_deadlines", "key_provisions", "risks", "next_steps"]:
         merged["analysis"][key] = list({
             json.dumps(item): item 
             for item in merged["analysis"][key]
         }.values())
     
-    # Remove duplicates from obligations
-    merged["analysis"]["obligations"]["party1"] = list(dict.fromkeys(
-        merged["analysis"]["obligations"]["party1"]
-    ))
-    merged["analysis"]["obligations"]["party2"] = list(dict.fromkeys(
-        merged["analysis"]["obligations"]["party2"]
-    ))
+    merged["analysis"]["obligations"]["party1"] = list(set(merged["analysis"]["obligations"]["party1"]))
+    merged["analysis"]["obligations"]["party2"] = list(set(merged["analysis"]["obligations"]["party2"]))
     
     return merged
-def create_analysis_prompt(text: str) -> str:
-    base_prompt = """You are a highly experienced legal professional conducting a thorough document analysis. Think like both an expert lawyer and a client advocate. Your analysis must be comprehensive, detailed, and insightful.
-
-ANALYSIS APPROACH:
-1. First, thoroughly read and understand the entire document
-2. Identify ALL significant elements, both explicit and implicit
-3. Consider both legal and practical implications
-4. Flag any unusual, missing, or concerning elements
-5. Note relationships between different provisions
-6. Highlight both rights and obligations of all parties
-
-Required Analysis Structure:
-{
-    "document_profile": {
-        "classification": {
-            "document_type": "Exact document type",
-            "legal_category": "Area of law",
-            "jurisdiction": "Governing jurisdiction",
-            "governing_law": "Specific laws/regulations that apply",
-            "document_subtype": "Specific type within category",
-            "applicable_regulations": ["List of relevant regulations"]
-        },
-        "parties": [
-            {
-                "name": "Exact party name",
-                "role": "Role in document",
-                "type": "individual/entity",
-                "primary_obligations": ["List key obligations"],
-                "primary_rights": ["List key rights"],
-                "key_restrictions": ["List main restrictions/limitations"],
-                "address": "Full address if provided",
-                "relationship_to_others": "Relationship to other parties",
-                "authority": "Authority/capacity in which they act"
-            }
-        ],
-"matter_info": {
-            "subject": "Specific subject matter",
-            "purpose": "Document's primary purpose",
-            "scope": {
-                "included": ["What's explicitly included"],
-                "excluded": ["What's explicitly excluded"],
-                "conditional": ["What's conditionally included"],
-                "geographic_scope": "Territorial scope if specified",
-                "temporal_scope": "Time period covered"
-            },
-            "special_circumstances": ["Any unique aspects"],
-            "related_matters": ["Related cases/documents"],
-            "precedent_documents": ["Reference documents"]
-        }
-    },
-    "comprehensive_summary": {
-        "executive_brief": "Clear, detailed explanation of document purpose and effect",
-        "key_points": [
-            {
-                "point": "Major point from document",
-                "explanation": "Plain language explanation",
-                "legal_significance": "Legal implications",
-                "practical_impact": "Real-world impact",
-                "source": "Section reference",
-                "related_provisions": ["Related sections"],
-                "urgency_level": "HIGH/MEDIUM/LOW"
-            }
-        ],
-        "unusual_aspects": [
-            {
-                "aspect": "What's unusual",
-                "why_significant": "Why it matters",
-                "potential_impact": "Possible consequences",
-                "comparison": "How it differs from standard",
-                "recommendations": ["Suggested approaches"]
-            }
-        ],
-"critical_elements": [
-            {
-                "element": "Critical component",
-                "importance": "Why it's critical",
-                "implications": "What it means",
-                "requirements": "What it requires",
-                "timeline": "When it applies",
-                "source": "Section reference"
-            }
-        ]
-    },
-    "key_terms_analysis": {
-        "financial_terms": [
-            {
-                "term_type": "Type of financial term",
-                "details": "Specific details",
-                "amount": "Monetary value if applicable",
-                "conditions": "Any conditions",
-                "timing": "When it applies",
-                "calculation_method": "How it's calculated",
-                "payment_terms": "Payment requirements",
-                "consequences": "What happens if not met",
-                "exceptions": "Any exceptions",
-                "source": "Section reference",
-                "related_provisions": ["Related sections"]
-            }
-        ],
-        "operational_terms": [
-            {
-                "requirement": "What must be done",
-                "who": "Responsible party",
-                "when": "Timing/deadline",
-                "how": "Process requirements",
-                "standards": "Performance standards",
-                "verification": "How compliance is verified",
-                "reporting": "Reporting requirements",
-                "consequences": "Results of non-compliance",
-                "source": "Section reference"
-            }
-        ],
-"legal_terms": [
-            {
-                "term": "Legal requirement",
-                "explanation": "Plain language explanation",
-                "obligations": "What it requires",
-                "implications": "Legal significance",
-                "applicable_law": "Governing law/regulation",
-                "compliance_requirements": "How to comply",
-                "exceptions": "Any exceptions",
-                "precedents": "Relevant legal precedents",
-                "source": "Section reference"
-            }
-        ],
-        "defined_terms": [
-            {
-                "term": "Defined term",
-                "definition": "Exact definition from document",
-                "context": "How it's used",
-                "significance": "Why it matters",
-                "related_terms": ["Related definitions"],
-                "source": "Section reference"
-            }
-        ]
-    },
-    "critical_dates_deadlines": {
-        "immediate_deadlines": [
-            {
-                "deadline": "Specific date/timeline",
-                "requirement": "What's required",
-                "responsible_party": "Who must act",
-                "prerequisites": "What must happen first",
-                "consequences": "What happens if missed",
-                "extensions": "Possible extensions",
-                "notification_requirements": "Who must be notified",
-                "documentation": "Required documentation",
-                "source": "Section reference"
-            }
-        ],
-        "recurring_obligations": [
-            {
-                "frequency": "How often",
-                "requirement": "What's required",
-                "details": "Specific requirements",
-                "timing": "When within period",
-                "responsible_party": "Who must perform",
-                "tracking_method": "How to track",
-                "verification": "How to verify completion",
-                "consequences": "Results of non-compliance"
-            }
-        ],
-"conditional_deadlines": [
-            {
-                "trigger": "What triggers the deadline",
-                "timeline": "When it must be done",
-                "requirement": "What must be done",
-                "responsible_party": "Who must act",
-                "notification": "Who must be notified",
-                "documentation": "Required documentation",
-                "consequences": "What happens if missed"
-            }
-        ],
-        "key_dates": [
-            {
-                "date": "Specific date",
-                "event": "What happens",
-                "significance": "Why it matters",
-                "requirements": "What's required",
-                "parties_involved": ["Who's involved"],
-                "source": "Section reference"
-            }
-        ]
-    },
-    "rights_and_obligations": {
-        "party_rights": [
-            {
-                "party": "Who has the right",
-                "right": "Specific right",
-                "conditions": "Conditions for exercising",
-                "limitations": "Any limitations",
-                "exercise_procedure": "How to exercise",
-                "notice_requirements": "Required notifications",
-                "time_constraints": "Time limits",
-                "exclusions": "What's not included",
-                "source": "Section reference"
-            }
-        ],
-        "party_obligations": [
-            {
-                "party": "Who has obligation",
-                "obligation": "Specific requirement",
-                "standards": "Performance standards",
-                "timing": "When it applies",
-                "prerequisites": "What must happen first",
-                "compliance_method": "How to comply",
-                "verification": "How compliance is verified",
-                "consequences": "Results of breach",
-                "cure_provisions": "How to fix breaches",
-                "source": "Section reference"
-            }
-        ],
-"mutual_obligations": [
-            {
-                "obligation": "Shared requirement",
-                "parties_involved": ["List parties"],
-                "details": "Specific requirements",
-                "coordination": "How parties work together",
-                "responsibilities": "Individual responsibilities",
-                "dispute_resolution": "How to resolve disagreements",
-                "source": "Section reference"
-            }
-        ],
-        "conditional_obligations": [
-            {
-                "trigger": "What activates obligation",
-                "obligation": "What must be done",
-                "responsible_party": "Who must do it",
-                "timeline": "When it must be done",
-                "conditions": "Required conditions",
-                "verification": "How to verify",
-                "source": "Section reference"
-            }
-        ]
-    },
-    "key_provisions_analysis": {
-        "essential_clauses": [
-            {
-                "title": "Clause name",
-                "content": "Exact quote",
-                "plain_english": "Simple explanation",
-                "legal_significance": "Legal meaning",
-                "practical_implications": "Real-world impact",
-                "requirements": "What it requires",
-                "enforcement": "How it's enforced",
-                "relationship": "Connection to other clauses",
-                "precedent_analysis": "Relevant legal precedents",
-                "source": "Section reference"
-            }
-        ],
-        "protective_clauses": [
-            {
-                "protection_type": "What it protects",
-                "mechanism": "How it works",
-                "beneficiary": "Who it protects",
-                "scope": "What's covered",
-                "limitations": "What's not covered",
-                "enforcement": "How it's enforced",
-                "duration": "How long it lasts",
-                "exceptions": "When it doesn't apply",
-                "source": "Section reference"
-            }
-        ],
-"procedural_requirements": [
-            {
-                "procedure": "What must be done",
-                "steps": ["Specific steps required"],
-                "timing": "When it applies",
-                "parties_involved": ["Who's involved"],
-                "documentation": "Required documentation",
-                "verification": "How to verify completion",
-                "consequences": "What happens if not followed",
-                "source": "Section reference"
-            }
-        ],
-        "termination_provisions": [
-            {
-                "scenario": "Termination situation",
-                "requirements": "What's required",
-                "process": "Steps to follow",
-                "notice": "Notice requirements",
-                "cure_rights": "Rights to fix issues",
-                "consequences": "Results of termination",
-                "surviving_obligations": "What continues after",
-                "source": "Section reference"
-            }
-        ]
-    },
-    "comprehensive_risk_analysis": {
-        "contractual_risks": [
-            {
-                "risk": "Specific risk",
-                "scenario": "How it might occur",
-                "likelihood": "HIGH/MEDIUM/LOW",
-                "impact": "Potential consequences",
-                "affected_party": "Who is at risk",
-                "trigger_events": ["What could cause this"],
-                "early_warning_signs": ["Signs to watch for"],
-                "mitigation_options": "How to reduce risk",
-                "contingency_plans": "What to do if it happens",
-                "source_provisions": ["Relevant sections"],
-                "monitoring_requirements": "How to monitor",
-                "insurance_requirements": "Required coverage"
-            }
-        ],
-        "compliance_risks": [
-            {
-                "requirement": "What's required",
-                "risk": "Risk of non-compliance",
-                "regulatory_framework": "Governing regulations",
-                "consequences": "Potential penalties/outcomes",
-                "likelihood": "HIGH/MEDIUM/LOW",
-                "impact": "Severity of consequences",
-                "compliance_steps": "How to comply",
-                "monitoring": "How to track compliance",
-                "reporting": "Required reporting",
-                "documentation": "Required documentation",
-                "source": "Section reference"
-            }
-        ],
-"practical_risks": [
-            {
-                "risk": "Real-world risk",
-                "context": "When it might occur",
-                "warning_signs": ["What to watch for"],
-                "business_impact": "Effect on operations",
-                "financial_impact": "Cost implications",
-                "reputation_impact": "Effect on reputation",
-                "preventive_steps": ["How to prevent"],
-                "remedial_actions": ["What to do if it happens"],
-                "insurance": "Available coverage",
-                "source": "Section reference"
-            }
-        ],
-        "relationship_risks": [
-            {
-                "risk": "Potential relationship issue",
-                "context": "How it might arise",
-                "parties_affected": ["Who's affected"],
-                "early_signs": ["Warning indicators"],
-                "impact_on_performance": "Effect on obligations",
-                "communication_requirements": "Required communications",
-                "prevention": "How to prevent",
-                "management": "How to handle if it occurs",
-                "escalation_process": "How to escalate issues",
-                "resolution_methods": "How to resolve",
-                "source": "Section reference"
-            }
-        ]
-    },
-    "special_considerations": {
-        "unique_features": [
-            {
-                "feature": "What's unique",
-                "significance": "Why it matters",
-                "implications": "What it means",
-                "compare_to_standard": "How it differs from normal",
-                "advantages": ["Benefits"],
-                "disadvantages": ["Drawbacks"],
-                "special_requirements": "Special handling needed",
-                "source": "Section reference"
-            }
-        ],
-"potential_issues": [
-            {
-                "issue": "Potential problem",
-                "context": "When it might arise",
-                "implications": "What it could mean",
-                "early_indicators": ["Warning signs"],
-                "preventive_measures": "How to prevent",
-                "monitoring": "How to track",
-                "remedies": "How to address",
-                "escalation": "When to escalate",
-                "source": "Section reference"
-            }
-        ],
-        "practice_tips": [
-            {
-                "tip": "Practical advice",
-                "rationale": "Why it matters",
-                "implementation": "How to follow",
-                "benefits": "Why it helps",
-                "timing": "When to apply",
-                "resources_needed": "What's required",
-                "success_metrics": "How to measure success",
-                "source": "Section reference"
-            }
-        ],
-        "industry_specific": [
-            {
-                "consideration": "Industry-specific issue",
-                "relevance": "Why it matters",
-                "industry_standards": "Applicable standards",
-                "best_practices": "Industry best practices",
-                "regulatory_aspects": "Special regulations",
-                "source": "Section reference"
-            }
-        ]
-    },
-"professional_obligations": {
-        "attorney_obligations": [
-            {
-                "obligation": "Specific duty",
-                "standard": "Performance standard",
-                "scope": "What it covers",
-                "limitations": "What it doesn't cover",
-                "compliance_requirements": "How to comply",
-                "ethical_considerations": "Ethical aspects",
-                "documentation_needed": "Required records",
-                "source": "Section reference"
-            }
-        ],
-        "client_obligations": [
-            {
-                "obligation": "Required from client",
-                "details": "Specific requirements",
-                "timing": "When it applies",
-                "importance": "Why it matters",
-                "consequences": "If not fulfilled",
-                "support_needed": "Help required",
-                "verification": "How to verify",
-                "source": "Section reference"
-            }
-        ],
-        "ethical_considerations": [
-            {
-                "issue": "Ethical concern",
-                "rule_reference": "Governing rule",
-                "requirements": "What's required",
-                "limitations": "What's prohibited",
-                "best_practices": "How to handle",
-                "documentation": "Required records",
-                "source": "Section reference"
-            }
-        ]
-    }
-}
-
-CRITICAL REQUIREMENTS:
-1. Provide actual quotes from the document wherever possible
-2. Include section references for every significant point
-3. Identify both explicit and implicit obligations
-4. Note any missing standard provisions
-5. Flag unusual or non-standard terms
-6. Explain complex legal concepts in plain language
-7. Highlight practical implications and real-world impacts
-8. Include all monetary amounts, dates, and deadlines
-9. Cross-reference related provisions
-10. Note both rights and obligations of all parties
-11. Identify potential issues and recommend solutions
-12. Focus on specific details rather than generic statements
-13. Use actual document text to support analysis
-14. Highlight time-sensitive requirements
-15. Note relationships between different provisions
-
-Document to analyze (analyze thoroughly and provide specific details from the document):
-
-"""
-    return base_prompt + text
 
 @app.post("/analyze")
 async def analyze_document(file: UploadFile = File(...)):
@@ -678,74 +224,35 @@ async def analyze_document(file: UploadFile = File(...)):
             extracted_text += f"\nPage {page_num + 1}:\n{page_text}"
         
         logger.debug(f"Extracted {len(extracted_text)} characters from PDF")
-
-        # Split document into manageable chunks
+        
+        # Split into small chunks
         chunks = chunk_document(extracted_text)
         logger.debug(f"Split document into {len(chunks)} chunks")
+        
+        system_message = """You are a legal document analyzer. Focus on:
+1. Identifying key terms and provisions
+2. Finding dates and deadlines
+3. Spotting risks and obligations
+4. Noting action items
+Provide specific quotes and references."""
 
+        # Process chunks with delay between each
         analyses = []
-        system_message = """You are an expert legal document analyzer with deep expertise in:
-1. Document analysis and interpretation
-2. Risk assessment and compliance
-3. Legal implications and consequences
-4. Practical implications and requirements
-5. Professional obligations and ethics
-
-Your task is to:
-1. Thoroughly analyze the document
-2. Extract and quote specific provisions
-3. Identify all key terms, dates, and requirements
-4. Note both explicit and implicit obligations
-5. Flag any unusual or missing elements
-6. Provide section-specific references
-7. Explain in both legal and plain language
-8. Focus on practical implications
-9. Highlight all critical deadlines
-10. Identify potential issues proactively"""
-        # Process each chunk
         for i, chunk in enumerate(chunks):
-            try:
-                logger.debug(f"Processing chunk {i+1} of {len(chunks)}")
-                response = client.chat.completions.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": system_message},
-                        {"role": "user", "content": create_analysis_prompt(chunk)}
-                    ],
-                    temperature=0.1,
-                    max_tokens=2000
-                )
-                
-                response_text = response.choices[0].message.content
-                logger.debug(f"Received response for chunk {i+1}")
-                
-                try:
-                    # Clean up the response text
-                    cleaned_response = response_text.strip()
-                    if cleaned_response.startswith("```json"):
-                        cleaned_response = cleaned_response[7:]
-                    if cleaned_response.endswith("```"):
-                        cleaned_response = cleaned_response[:-3]
-                    
-                    chunk_analysis = json.loads(cleaned_response)
-                    analyses.append(chunk_analysis)
-                    
-                except json.JSONDecodeError as e:
-                    logger.error(f"JSON parsing error in chunk {i+1}: {e}")
-                    continue
-                    
-            except Exception as e:
-                logger.error(f"Error processing chunk {i+1}: {str(e)}")
-                continue
+            logger.debug(f"Processing chunk {i+1}/{len(chunks)}")
+            if i > 0:
+                time.sleep(1)  # Delay between chunks
+            result = process_chunk_with_retry(chunk, system_message)
+            if result:
+                analyses.append(result)
 
-        # Merge analyses from all chunks
+        # Merge and return results
         merged_analysis = merge_analyses(analyses)
         
-        # Add metadata
         merged_analysis["analysis_metadata"] = {
             "timestamp": datetime.datetime.now().isoformat(),
             "document_length": len(extracted_text),
-            "analysis_version": "3.1",
+            "analysis_version": "4.0",
             "document_name": file.filename,
             "chunks_processed": len(chunks),
             "successful_chunks": len(analyses)
@@ -770,62 +277,43 @@ async def ask_question(file: UploadFile = File(...), question: str = Form(...)):
         for page_num in range(len(pdf_reader.pages)):
             extracted_text += f"\nPage {page_num + 1}:\n{pdf_reader.pages[page_num].extract_text()}"
 
-        # Split into chunks if needed
-        chunks = chunk_document(extracted_text, max_tokens=6000)
+        # Split into small chunks
+        chunks = chunk_document(extracted_text, max_tokens=1500)
         logger.debug(f"Split document into {len(chunks)} chunks for Q&A")
-        # Process each chunk to answer the question
+        
         answers = []
-        for chunk in chunks:
+        for i, chunk in enumerate(chunks):
+            if i > 0:
+                time.sleep(1)  # Rate limiting
             try:
                 response = client.chat.completions.create(
                     model="gpt-4",
                     messages=[
                         {
                             "role": "system",
-                            "content": "You are an expert legal analyst. Provide detailed, accurate answers with specific references to the document."
+                            "content": "You are a legal expert. Answer questions based only on the document content."
                         },
                         {
                             "role": "user",
-                            "content": f"""Document section: {chunk}\n\nQuestion: {question}\n\nProvide relevant information from this section of the document, with specific quotes and references."""
+                            "content": f"Document section:\n{chunk}\n\nQuestion: {question}\n\nProvide relevant information with specific quotes."
                         }
                     ],
                     temperature=0.1,
-                    max_tokens=1000
+                    max_tokens=500
                 )
-                chunk_answer = response.choices[0].message.content
-                if chunk_answer.strip() and not chunk_answer.lower().startswith(("i don't", "no relevant", "i cannot")):
-                    answers.append(chunk_answer)
+                
+                answer = response.choices[0].message.content
+                if answer and not answer.lower().startswith(("i don't", "no relevant", "i cannot")):
+                    answers.append(answer)
                 
             except Exception as e:
-                logger.error(f"Error processing Q&A chunk: {str(e)}")
+                logger.error(f"Error processing Q&A chunk {i+1}: {str(e)}")
                 continue
         
-        # Combine answers
         if not answers:
             return {"answer": "I couldn't find relevant information to answer your question in the document."}
         
-        combined_answer = "\n\n".join(answers)
-        
-        # Summarize if too long
-        if len(combined_answer) > 1000:
-            try:
-                summary_response = client.chat.completions.create(
-                    model="gpt-4",
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": "Summarize the following analysis while preserving key details and references."
-                        },
-                        {"role": "user", "content": combined_answer}
-                    ],
-                    temperature=0.1,
-                    max_tokens=1000
-                )
-                combined_answer = summary_response.choices[0].message.content
-            except Exception as e:
-                logger.error(f"Error summarizing answer: {str(e)}")
-                # Fall back to truncated original answer if summarization fails
-                combined_answer = combined_answer[:1000] + "..."
+        combined_answer = " ".join(answers)
         
         return {"answer": combined_answer}
         
